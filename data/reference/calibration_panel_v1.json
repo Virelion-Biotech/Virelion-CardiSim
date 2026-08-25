@@ -1,0 +1,52 @@
+{
+  "version": "1.0",
+  "purpose": "Empirical calibration panel for CardiSim v0.2+; raw/processed expression files are not redistributed here.",
+  "datasets": [
+    {
+      "accession": "GSE185289",
+      "organism": "Sus scrofa",
+      "modality": "snRNA-seq",
+      "priority": "primary",
+      "role": "maturation_and_regeneration",
+      "source_url": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE185289",
+      "processed_resource": "GSE185289_Cardiomyocyte_Seurat.Robj.gz",
+      "raw_resource": "GSE185289_RAW.tar",
+      "groups": ["FH", "CTL-P1", "CTL-P28", "CTL-P56", "ARP1-P28", "ARP1-P56", "MIP28-P56", "ARP1-MIP28-P30", "ARP1-MIP28-P35", "ARP1-MIP28-P42", "ARP1-MIP28-P56"],
+      "notes": "Best panel for developmental maturation and regenerative-vs-nonregenerative contrast; use biological animal/sample IDs as grouping units."
+    },
+    {
+      "accession": "GSE240848",
+      "organism": "Rattus norvegicus",
+      "modality": "snRNA-seq",
+      "priority": "acute_injury",
+      "role": "acute_mi",
+      "source_url": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE240848",
+      "processed_resources": ["GSE240848_barcodes.tsv.gz", "GSE240848_features.tsv.gz", "GSE240848_matrix.mtx.gz"],
+      "samples": {
+        "GSM7710413": {"label": "Sham", "time_hours": 0},
+        "GSM7710414": {"label": "MI_1H", "time_hours": 1},
+        "GSM7710415": {"label": "MI_6H", "time_hours": 6},
+        "GSM7710416": {"label": "MI_24H", "time_hours": 24}
+      },
+      "notes": "Four sample groups; useful for acute-response shape, but not sufficient by itself for subject-replicated calibration."
+    },
+    {
+      "accession": "GSE135310",
+      "organism": "Mus musculus",
+      "modality": "scRNA-seq",
+      "priority": "inflammation",
+      "role": "post_mi_inflammation",
+      "source_url": "https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE135310",
+      "processed_resource": "GSE135310_RAW.tar",
+      "samples": ["GSM4005123", "GSM4005124", "GSM4005125", "GSM4005126", "GSM4005127", "GSM4005128", "GSM4200846"],
+      "notes": "Use primarily to calibrate inflammatory/immune phenotype dynamics; do not treat immune-only samples as whole-heart physiology."
+    }
+  ],
+  "policy": {
+    "subject_unit": "animal_or_donor_when_available",
+    "technical_replicates": "must_not_be_treated_as_independent_biological_replicates",
+    "destructive_timecourse": "sample_mean_or_subject_mean_transition_only",
+    "cell_identity": "derive_or_use_authoritative_cell_labels_before_mixing_cell_types",
+    "claim_level": "proxy_target_not_direct_biological_ground_truth"
+  }
+}
