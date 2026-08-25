@@ -1,0 +1,50 @@
+{
+  "schema_version": "1.0",
+  "purpose": "Empirical calibration panel for CardiSim",
+  "policy": "public_metadata_plus_runtime_fetch",
+  "datasets": [
+    {
+      "accession": "GSE185289",
+      "repository": "GEO",
+      "organism": "Sus scrofa",
+      "modality": "snrna",
+      "role": ["maturation", "regeneration", "injury", "remodeling"],
+      "groups": ["FH", "CTL-P1", "CTL-P28", "CTL-P56", "ARP1-P28", "ARP1-P56", "MIP28-P56", "ARP1-MIP28-P30", "ARP1-MIP28-P35", "ARP1-MIP28-P42", "ARP1-MIP28-P56"],
+      "notes": "Primary longitudinal pig calibration source; directly contrasts regenerative ARP1+MI with non-regenerative MI and includes fetal/postnatal controls."
+    },
+    {
+      "accession": "GSE240848",
+      "repository": "GEO",
+      "organism": "Rattus norvegicus",
+      "modality": "snrna",
+      "role": ["acute_mi", "ischemia_reperfusion"],
+      "groups": ["Sham", "MI1h", "MI6h", "MI24h"],
+      "notes": "Acute infarct-zone calibration source with sham and ischemia/reperfusion time structure."
+    },
+    {
+      "accession": "GSE135310",
+      "repository": "GEO",
+      "organism": "Mus musculus",
+      "modality": "scrna",
+      "role": ["inflammation", "post_mi_timecourse"],
+      "groups": ["steady_state", "sham", "MI_day1", "MI_day3", "MI_day5"],
+      "notes": "Inflammatory-cell calibration source for post-MI immune-state dynamics."
+    }
+  ],
+  "derived_target_features": [
+    "maturity",
+    "contractility",
+    "calcium_handling",
+    "electrophysiology",
+    "metabolism",
+    "hypertrophy",
+    "fibrosis",
+    "inflammation",
+    "angiogenesis",
+    "viability",
+    "oxidative_stress",
+    "mitochondrial_health"
+  ],
+  "status": "panel_locked_metadata_only",
+  "next_step": "fetch processed expression data and derive subject-level module scores before fitting CardiSim parameters"
+}
