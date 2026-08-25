@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "CardiSim empirical trajectory",
+  "type": "object",
+  "required": ["dataset_id", "study_id", "source_accession", "organism", "modality", "condition", "time_unit", "observations"],
+  "properties": {
+    "dataset_id": {"type": "string"},
+    "study_id": {"type": "string"},
+    "source_accession": {"type": "string"},
+    "organism": {"type": "string"},
+    "modality": {"type": "string"},
+    "condition": {"type": "string"},
+    "time_unit": {"type": "string"},
+    "observations": {"type": "array", "items": {"type": "object", "required": ["subject_id", "cell_id", "time", "phenotype", "value"], "properties": {"subject_id": {"type": "string"}, "cell_id": {"type": "string"}, "time": {"type": "number"}, "phenotype": {"type": "string", "enum": ["maturity", "contractility", "calcium_handling", "electrophysiology", "metabolism", "hypertrophy", "fibrosis", "inflammation", "angiogenesis", "viability", "oxidative_stress", "mitochondrial_health"]}, "value": {"type": "number", "minimum": 0, "maximum": 1}}}}
+  }
+}
