@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "virelion-cardisim"
-version = "0.2.0"
+version = "0.3.0"
 description = "Synthetic cardiac-cell and phenotype trajectory simulator with empirical calibration support."
 readme = "README.md"
 requires-python = ">=3.10"
