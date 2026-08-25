@@ -2,6 +2,7 @@
 
 from .atlas_bridge import calibrate_atlas_export, validate_atlas_manifest
 from .calibration import CalibrationResult, EmpiricalTrajectory, calibrate, calibration_from_csv, load_long_csv
+from .cohort_calibration import CohortCalibrationResult, CohortObservation, calibrate_cohort
 from .dynamics import DynamicsParameters
 from .events import ChallengeEvent, EventSchedule
 from .geo_sources import SOURCES, GeoSource, download
@@ -21,7 +22,8 @@ __all__ = [
     "load_long_csv", "calibration_from_csv", "validate_atlas_manifest", "calibrate_atlas_export",
     "GeoSource", "SOURCES", "download", "sparse_module_scores", "PROXY_MODULES",
     "derive_targets", "write_long_targets", "Observation", "LongitudinalCalibrationReport",
-    "LongitudinalCalibrationResult", "calibrate_longitudinal", "module_scores", "mean_target",
+    "LongitudinalCalibrationResult", "calibrate_longitudinal", "CohortObservation",
+    "CohortCalibrationResult", "calibrate_cohort", "module_scores", "mean_target",
 ]
 
 __version__ = "0.3.0"
