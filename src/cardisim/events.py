@@ -60,6 +60,16 @@ class EventSchedule:
 
     events: tuple[ChallengeEvent, ...] = ()
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.events, tuple):
+            raise TypeError(
+                "EventSchedule.events must be a tuple of ChallengeEvent objects; "
+                "for a single event, include the trailing comma"
+            )
+        invalid = [event for event in self.events if not isinstance(event, ChallengeEvent)]
+        if invalid:
+            raise TypeError("EventSchedule.events must contain only ChallengeEvent objects")
+
     def forcing(self, t: float) -> np.ndarray:
         if not self.events:
             return np.zeros(N_FEATURES, dtype=float)
