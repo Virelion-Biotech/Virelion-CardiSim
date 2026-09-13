@@ -8,6 +8,7 @@ from .dynamics import DynamicsParameters
 from .events import ChallengeEvent, EventSchedule
 from .geo_sources import SOURCES, GeoSource, download
 from .geo10x import sparse_module_scores
+from .geometry_reference import EPPreprocessor, UnitGaussianNormalizer
 from .longitudinal import LongitudinalCalibrationReport, LongitudinalCalibrationResult, Observation, calibrate_longitudinal
 from .marker_modules import PROXY_MODULES
 from .models import PHENOTYPES, CardiacState, SimulationConfig
@@ -26,6 +27,7 @@ __all__ = [
     "LongitudinalCalibrationResult", "calibrate_longitudinal", "CohortObservation",
     "CohortCalibrationResult", "calibrate_cohort", "module_scores", "mean_target",
     "ReferenceRecord", "DEEPCARDIOSIM_REFERENCE", "deepcardiosim_reference",
+    "EPPreprocessor", "UnitGaussianNormalizer",
 ]
 
 __version__ = "0.3.0"

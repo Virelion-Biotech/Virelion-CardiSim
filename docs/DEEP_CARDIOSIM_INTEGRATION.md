@@ -31,7 +31,7 @@ The first CardiSim benchmark should consume one or more published samples and re
 
 1. target-field shape and finite-value checks;
 2. normalization/inverse-normalization round-trip error;
-3. reference GNN/G​​INO configuration metadata;
+3. reference GNN/GINO configuration metadata;
 4. absolute and relative field errors once model weights are available;
 5. runtime and memory measurements;
 6. resolution-shift results on higher-density meshes;
@@ -49,13 +49,13 @@ The published study compares GNN and GINO on synthetic cases, finer resolutions,
 
 ## Implementation order
 
-### Phase 1
+### Phase 1 — complete
 
-Add provenance records and a dependency-light reference API. Fix repository metadata so the declared Python package license matches the AGPL-3.0 license file.
+Added provenance records and a dependency-light reference API. Fixed package metadata so the declared Python package license matches the AGPL-3.0 license file.
 
-### Phase 2
+### Phase 2 — in progress
 
-Implement `CardiSimProcessor` for geometry, node features, output normalization, and reversible transforms without depending on DeepCardioSim internals.
+Implemented a NumPy-only `EPPreprocessor` and `UnitGaussianNormalizer` that establish the geometry/feature/target normalization contract and per-geometry Cartesian query-grid construction without depending on DeepCardioSim internals.
 
 ### Phase 3
 
@@ -71,4 +71,4 @@ Promote the benchmark into CardiEval with synthetic, resolution-shift, perturbat
 
 ## Current status
 
-This document establishes the provenance-safe integration boundary. Model implementation is intentionally deferred until the reference dataset artifact inventory and the actual trained-weight availability are verified.
+The provenance boundary and first reusable preprocessing layer are now committed. The next gate is an externally downloaded, checksummed DeepCardioSim/Zenodo fixture followed by an end-to-end reference-sample loader before any large neural-network dependency is added.
