@@ -81,7 +81,8 @@ class EPPreprocessor:
         self.coordinate_normalizer = UnitGaussianNormalizer().fit(coordinates)
         self.feature_normalizer = UnitGaussianNormalizer().fit(features)
         if targets is not None:
-            self.target_normalizer = UnitGaussianNormalizer().fit(np.asarray(targets, dtype=float))
+            target_array = np.asarray(targets, dtype=float)
+            self.target_normalizer = UnitGaussianNormalizer().fit(target_array)
         return self
 
     def transform(
@@ -100,7 +101,8 @@ class EPPreprocessor:
         if targets is not None:
             if self.target_normalizer is None:
                 raise RuntimeError("target normalizer is not fitted")
-            transformed_target = self.target_normalizer.transform(np.asarray(targets, dtype=float))
+            target_array = np.asarray(targets, dtype=float)
+            transformed_target = self.target_normalizer.transform(target_array)
         return (
             self.coordinate_normalizer.transform(coordinates),
             self.feature_normalizer.transform(features),
@@ -117,7 +119,7 @@ class EPPreprocessor:
         coordinates: np.ndarray,
         resolution: tuple[int, int, int] = (28, 28, 28),
     ) -> QueryGrid:
-        """Create a Cartesian query grid over a geometry's physical bounding box."""
+        """Create a Cartesian query grid over a geometry's bounding box."""
         coordinates = _validate_2d(coordinates, "coordinates")
         if coordinates.shape[1] != 3:
             raise ValueError("coordinates must have exactly three spatial dimensions")
@@ -125,10 +127,19 @@ class EPPreprocessor:
             raise ValueError("each query-grid dimension must be at least 2")
         minimum = np.min(coordinates, axis=0)
         maximum = np.max(coordinates, axis=0)
-        axes = [np.linspace(minimum[i], maximum[i], int(resolution[i])) for i in range(3)]
+        axes = [
+            np.linspace(minimum[i], maximum[i], int(resolution[i]))
+            for i in range(3)
+        ]
         mesh = np.meshgrid(*axes, indexing="ij")
         points = np.stack(mesh, axis=-1).reshape(-1, 3)
-        return QueryGrid(points=points, shape=tuple(map(int, resolution)), minimum=minimum, maximum=maximum)
+        shape = tuple(map(int, resolution))
+        return QueryGrid(
+            points=points,
+            shape=shape,
+            minimum=minimum,
+            maximum=maximum,
+        )
 
 
 def _validate_2d(values: np.ndarray, name: str) -> np.ndarray:
