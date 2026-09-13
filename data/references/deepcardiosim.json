@@ -1,0 +1,41 @@
+{
+  "reference": {
+    "name": "DeepCardioSim",
+    "repository": "https://github.com/ehsanngh/DeepCardioSim",
+    "commit": "a0b271a9aee84fd7b6299602dd4dbf8a3a01698f",
+    "license": "MIT",
+    "paper": "Naghavi E, Wang H, Ziaei-Rad V, et al. Rapid prediction of cardiac activation in the left ventricle with geometric deep learning: a step towards cardiac resynchronization therapy planning. npj Digital Medicine. 2026;9:225.",
+    "doi": "10.1038/s41746-026-02399-7"
+  },
+  "dataset": {
+    "zenodo": "https://zenodo.org/records/17651628",
+    "reported_sample_count": 35000,
+    "simulation_type": "finite-element cardiac electrophysiology",
+    "target": "left-ventricular activation time map",
+    "inputs": [
+      "LV point-cloud geometry",
+      "one or two pacing locations",
+      "tissue conductivity",
+      "myofiber direction"
+    ],
+    "reported_training_distribution": {
+      "single_pacing": "approximately 50%",
+      "dual_pacing": "approximately 50%"
+    }
+  },
+  "integration_policy": {
+    "copy_code": false,
+    "vendor_code": false,
+    "reimplement_native_components": true,
+    "retain_attribution": true,
+    "freeze_external_reference": true,
+    "validate_against_published_results": true,
+    "dataset_bytes_in_git": false
+  },
+  "planned_adapters": [
+    "CardiSimProcessor",
+    "CardiGNN",
+    "CardiGINO",
+    "DeepCardioSim benchmark fixture"
+  ]
+}
