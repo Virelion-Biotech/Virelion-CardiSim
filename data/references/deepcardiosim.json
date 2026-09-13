@@ -9,6 +9,7 @@
   },
   "dataset": {
     "zenodo": "https://zenodo.org/records/17651628",
+    "record_api": "https://zenodo.org/api/records/17651628",
     "reported_sample_count": 35000,
     "simulation_type": "finite-element cardiac electrophysiology",
     "target": "left-ventricular activation time map",
@@ -21,6 +22,13 @@
     "reported_training_distribution": {
       "single_pacing": "approximately 50%",
       "dual_pacing": "approximately 50%"
+    },
+    "artifact_inventory": {
+      "status": "runtime-generated-from-zenodo-api",
+      "script": "scripts/inventory_deepcardiosim.py",
+      "manifest_output": "artifacts/deepcardiosim_manifest.json",
+      "checksums": "authoritative Zenodo checksum fields",
+      "bulk_data_in_git": false
     }
   },
   "integration_policy": {

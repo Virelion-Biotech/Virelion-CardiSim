@@ -9,6 +9,7 @@ DeepCardioSim is retained as an external scientific reference, not copied wholes
 - Repository: https://github.com/ehsanngh/DeepCardioSim
 - Pinned reference commit: `a0b271a9aee84fd7b6299602dd4dbf8a3a01698f`
 - Dataset: https://zenodo.org/records/17651628
+- Dataset API: https://zenodo.org/api/records/17651628
 - Paper: Naghavi E, Wang H, Ziaei-Rad V, et al. *Rapid prediction of cardiac activation in the left ventricle with geometric deep learning: a step towards cardiac resynchronization therapy planning*. npj Digital Medicine. 2026;9:225.
 - DOI: 10.1038/s41746-026-02399-7
 
@@ -24,6 +25,23 @@ DeepCardioSim is retained as an external scientific reference, not copied wholes
 | 2D/3D examples | Convert useful cases to small fixtures | CI smoke tests |
 | FEniCS container definitions | Reference reproducibility pattern | Simulator provenance |
 | neural operator core | Prefer maintained upstream dependencies where possible | Reproducible model construction |
+
+## Artifact inventory and retrieval
+
+The repository does not guess Zenodo filenames or checksums. `scripts/inventory_deepcardiosim.py` queries the Zenodo record API and records the returned artifact keys, sizes, download links, and checksum algorithm/digest. With `--download`, every returned artifact is downloaded and its checksum is verified before it is retained.
+
+Example:
+
+```bash
+python scripts/inventory_deepcardiosim.py --manifest artifacts/deepcardiosim_manifest.json
+python scripts/inventory_deepcardiosim.py --download --output artifacts/deepcardiosim
+```
+
+The generated manifest belongs in the local/reproducibility artifact area rather than Git when it contains transient download metadata. Bulk dataset bytes are intentionally excluded from the repository.
+
+## CI fixture
+
+`tests/fixtures/deepcardiosim_ep_smoke.json` is a tiny deterministic contract fixture derived from the published task schema. It is explicitly **not** claimed to be a downloaded DeepCardioSim sample. CI checks geometry/feature/target shape, finite values, reversible normalization, query-grid construction, and the pinned provenance record.
 
 ## Scientific benchmark contract
 
@@ -53,13 +71,13 @@ The published study compares GNN and GINO on synthetic cases, finer resolutions,
 
 Added provenance records and a dependency-light reference API. Fixed package metadata so the declared Python package license matches the AGPL-3.0 license file.
 
-### Phase 2 — in progress
+### Phase 2 — complete
 
 Implemented a NumPy-only `EPPreprocessor` and `UnitGaussianNormalizer` that establish the geometry/feature/target normalization contract and per-geometry Cartesian query-grid construction without depending on DeepCardioSim internals.
 
-### Phase 3
+### Phase 3 — complete
 
-Add small benchmark fixtures and a download/verification script for the Zenodo dataset. Bulk data should be cached outside the repository.
+Added runtime Zenodo artifact inventory/checksum retrieval and a deterministic CI fixture. The fixture is intentionally independent of network availability; live dataset retrieval remains an explicit acquisition operation.
 
 ### Phase 4
 
@@ -71,4 +89,4 @@ Promote the benchmark into CardiEval with synthetic, resolution-shift, perturbat
 
 ## Current status
 
-The provenance boundary and first reusable preprocessing layer are now committed. The next gate is an externally downloaded, checksummed DeepCardioSim/Zenodo fixture followed by an end-to-end reference-sample loader before any large neural-network dependency is added.
+The provenance boundary, preprocessing layer, acquisition script, and CI smoke fixture are committed. The next gate is a real Zenodo artifact inventory followed by loading one verified published artifact and building the first end-to-end model-independent sample adapter.
