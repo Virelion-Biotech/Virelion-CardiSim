@@ -12,8 +12,9 @@ def area_under_curve(result: SimulationResult, phenotype: str) -> float:
         raise KeyError(phenotype)
     i = PHENOTYPES.index(phenotype)
     signal = result.values[:, :, i].mean(axis=1)
-    integrator = getattr(np, "trapezoid", np.trapz)
-    return float(integrator(signal, result.time))
+    if hasattr(np, "trapezoid"):
+        return float(np.trapezoid(signal, result.time))
+    return float(np.trapz(signal, result.time))
 
 
 def peak_burden(result: SimulationResult, phenotype: str, direction: str = "high") -> float:
