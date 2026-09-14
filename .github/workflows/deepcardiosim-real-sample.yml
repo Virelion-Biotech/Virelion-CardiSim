@@ -1,0 +1,88 @@
+name: DeepCardioSim real-LV sample smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  real-sample:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e . meshio
+
+      - name: Download verified real-LV artifact
+        run: |
+          python scripts/inventory_deepcardiosim.py \
+            --download \
+            --artifact realLVs.zip \
+            --output artifacts/deepcardiosim
+
+      - name: Extract one published VTK case
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          archive = Path("artifacts/deepcardiosim/realLVs.zip")
+          destination = Path("artifacts/real_lvs")
+          destination.mkdir(parents=True, exist_ok=True)
+
+          with ZipFile(archive) as zf:
+              members = [name for name in zf.namelist() if name.lower().endswith(".vtk")]
+              if not members:
+                  raise SystemExit("realLVs.zip contains no VTK cases")
+              member = members[0]
+              target = destination / Path(member).name
+              with zf.open(member) as source, target.open("wb") as sink:
+                  sink.write(source.read())
+              print(f"selected {member} -> {target}")
+          PY
+
+      - name: Convert one real-LV case with CardiSim
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import numpy as np
+
+          from cardisim.deepcardiosim_data import DeepCardioSimSample
+
+          vtk_path = next(Path("artifacts/real_lvs").glob("*.vtk"))
+          sample = DeepCardioSimSample.from_vtk(vtk_path)
+
+          if sample.n_nodes <= 0:
+              raise SystemExit("real-LV sample has no nodes")
+          if sample.n_features != 5:
+              raise SystemExit(f"unexpected feature count: {sample.n_features}")
+          if sample.n_targets != 1:
+              raise SystemExit(f"unexpected target count: {sample.n_targets}")
+          if not np.isfinite(sample.input_geom).all():
+              raise SystemExit("non-finite geometry")
+          if not np.isfinite(sample.a).all():
+              raise SystemExit("non-finite features")
+          if not np.isfinite(sample.y).all():
+              raise SystemExit("non-finite activation target")
+
+          print({
+              "case": vtk_path.name,
+              "nodes": sample.n_nodes,
+              "features": sample.n_features,
+              "targets": sample.n_targets,
+              "activation_min": float(sample.y.min()),
+              "activation_max": float(sample.y.max()),
+              "pacing_nodes": int(np.count_nonzero(sample.a[:, 0] == 1.0)),
+          })
+          PY
