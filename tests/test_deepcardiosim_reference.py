@@ -56,6 +56,26 @@ def test_reference_manifest_contract():
     assert manifest["integration_policy"]["dataset_bytes_in_git"] is False
 
 
+def test_pinned_artifact_snapshot_contract():
+    snapshot = json.loads(
+        Path("data/references/deepcardiosim_artifacts.json").read_text(encoding="utf-8")
+    )
+    names = {item["key"] for item in snapshot["files"]}
+    assert snapshot["record_id"] == "17651628"
+    assert snapshot["record_revision"] == 4
+    assert snapshot["policy"]["dataset_bytes_in_git"] is False
+    assert snapshot["training_shards"] == [
+        "data_chunk_001.pt",
+        "data_chunk_002.pt",
+        "data_chunk_003.pt",
+        "data_chunk_004.pt",
+        "data_chunk_005.pt",
+        "data_chunk_006.pt",
+    ]
+    assert set(snapshot["training_shards"]).issubset(names)
+    assert len(snapshot["files"]) == 12
+
+
 def test_zenodo_inventory_parser_uses_authoritative_checksums():
     record = {
         "metadata": {"title": "fixture"},
