@@ -122,7 +122,13 @@ def main(argv: list[str] | None = None) -> int:
         default=Path("artifacts/deepcardiosim_manifest.json"),
     )
     parser.add_argument(
-        "--download", action="store_true", help="download every Zenodo artifact"
+        "--download", action="store_true", help="download selected Zenodo artifacts"
+    )
+    parser.add_argument(
+        "--artifact",
+        action="append",
+        default=[],
+        help="artifact key to download; repeat to select multiple files",
     )
     args = parser.parse_args(argv)
 
@@ -134,8 +140,21 @@ def main(argv: list[str] | None = None) -> int:
             json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
         )
 
+        if args.artifact and not args.download:
+            raise ValueError("--artifact requires --download")
+
         if args.download:
-            for artifact in manifest["files"]:
+            selected = set(args.artifact) if args.artifact else None
+            available = {str(item["key"]): item for item in manifest["files"]}
+            unknown = sorted((selected or set()) - available.keys())
+            if unknown:
+                raise ValueError(f"unknown Zenodo artifact(s): {unknown}")
+            artifacts = (
+                [available[key] for key in args.artifact]
+                if selected is not None
+                else manifest["files"]
+            )
+            for artifact in artifacts:
                 checksum = artifact["checksum"]
                 if not checksum:
                     raise ValueError(
