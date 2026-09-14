@@ -62,7 +62,9 @@ def _case_arrays(case: Any, torch):
         raise ValueError(f"expected input_geom=(N,3), got {tuple(pos.shape)}")
     if y.shape != (pos.shape[0], 1):
         raise ValueError(f"expected y=(N,1), got {tuple(y.shape)}")
-    if not bool(torch.isfinite(a).all() and torch.isfinite(pos).all() and torch.isfinite(y).all()):
+    if not bool(
+        torch.isfinite(a).all() and torch.isfinite(pos).all() and torch.isfinite(y).all()
+    ):
         raise ValueError("case contains non-finite values")
     return a, pos, y
 
@@ -221,7 +223,6 @@ def main() -> int:
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=args.weight_decay)
 
     baseline_value = stats[2]
-    baseline_predictions = baseline_value.expand(sum(d.y.shape[0] for d in val_data), 1)
     baseline_target = inverse_target(torch.cat([d.y for d in val_data]), stats)
     baseline_val = metrics(baseline_value.expand_as(baseline_target), baseline_target)
 
