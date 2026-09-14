@@ -25,8 +25,8 @@ class UnitGaussianNormalizer:
         array = np.asarray(values, dtype=float)
         if array.size == 0:
             raise ValueError("cannot fit a normalizer on an empty array")
-        self.mean = np.mean(array, axis=0)
-        scale = np.std(array, axis=0)
+        self.mean = np.mean(array, axis=0, keepdims=True)
+        scale = np.std(array, axis=0, keepdims=True)
         self.std = np.where(scale < _EPS, 1.0, scale)
         return self
 
