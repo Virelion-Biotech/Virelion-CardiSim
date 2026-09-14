@@ -6,7 +6,7 @@ from cardisim.deepcardiosim_data import DeepCardioSimSample
 
 def make_arrays():
     geometry = np.array(
-        [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+        [[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0]],
         dtype=float,
     )
     features = np.array(
@@ -30,6 +30,48 @@ def test_from_mapping_canonicalizes_target_shape():
     assert sample.n_nodes == 4
     assert sample.n_features == 5
     assert sample.n_targets == 1
+
+
+def test_from_arrays_reproduces_vtk_feature_contract():
+    geometry, _, target = make_arrays()
+    sample = DeepCardioSimSample.from_arrays(
+        geometry,
+        {
+            "ploc_bool": np.array([1.0, 0.0, 0.0, 0.0]),
+            "D_iso": np.full(4, 0.2),
+            "ef": np.array(
+                [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+            ),
+            "activation_time": target,
+        },
+    )
+
+    assert sample.a.shape == (4, 5)
+    assert np.all(sample.a[:2, 0] == 1.0)
+    assert np.all(sample.a[2:, 0] == 0.0)
+    np.testing.assert_allclose(sample.y[:, 0], target)
+
+
+def test_from_arrays_accepts_t_act_alias_and_zero_fills_optional_fields():
+    geometry, _, target = make_arrays()
+    sample = DeepCardioSimSample.from_arrays(
+        geometry,
+        {"t_act": target},
+    )
+
+    assert sample.a.shape == (4, 5)
+    np.testing.assert_allclose(sample.a, 0.0)
+    np.testing.assert_allclose(sample.y[:, 0], target)
+
+
+def test_from_arrays_rejects_invalid_radius():
+    geometry, _, target = make_arrays()
+    with pytest.raises(ValueError, match="non-negative"):
+        DeepCardioSimSample.from_arrays(
+            geometry,
+            {"activation_time": target},
+            pacing_neighbor_radius=-1,
+        )
 
 
 def test_from_npy_matches_upstream_column_contract(tmp_path):
@@ -69,5 +111,5 @@ def test_rejects_short_npy_representation(tmp_path):
     path = tmp_path / "invalid.npy"
     np.save(path, np.zeros((3, 8)))
 
-    with pytest.raises(ValueError, match="N x 9\+"):
+    with pytest.raises(ValueError, match=r"N x 9\+"):
         DeepCardioSimSample.from_npy(path)
