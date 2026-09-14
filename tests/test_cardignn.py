@@ -1,3 +1,5 @@
+import importlib.util
+
 import numpy as np
 import pytest
 
@@ -5,11 +7,12 @@ from cardisim.deepcardiosim_data import DeepCardioSimSample
 
 
 def test_cardignn_module_is_optional():
-    try:
-        import torch
-        import torch_geometric
-    except ImportError:
+    if importlib.util.find_spec("torch") is None or importlib.util.find_spec(
+        "torch_geometric"
+    ) is None:
         pytest.skip("optional GNN dependencies are not installed")
+
+    import torch
 
     from cardisim.cardignn import CardiGNN, CardiGNNConfig, canonical_model_input
 
