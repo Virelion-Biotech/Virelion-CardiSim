@@ -2,6 +2,13 @@ name: DeepCardioSim real-LV sample smoke
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "src/cardisim/deepcardiosim_data.py"
+      - "scripts/inventory_deepcardiosim.py"
+      - "tests/test_deepcardiosim_data.py"
+      - ".github/workflows/deepcardiosim-real-sample.yml"
 
 permissions:
   contents: read
