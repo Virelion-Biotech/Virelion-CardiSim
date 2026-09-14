@@ -11,8 +11,9 @@ def area_under_curve(result: SimulationResult, phenotype: str) -> float:
     if phenotype not in PHENOTYPES:
         raise KeyError(phenotype)
     i = PHENOTYPES.index(phenotype)
-    # trapz remains available across the NumPy versions supported by pyproject.toml.
-    return float(np.trapz(result.values[:, :, i].mean(axis=1), result.time))
+    signal = result.values[:, :, i].mean(axis=1)
+    integrator = getattr(np, "trapezoid", np.trapz)
+    return float(integrator(signal, result.time))
 
 
 def peak_burden(result: SimulationResult, phenotype: str, direction: str = "high") -> float:
