@@ -18,7 +18,7 @@ DeepCardioSim is retained as an external scientific reference, not copied wholes
 | Reference component | CardiSim treatment | Validation target |
 | --- | --- | --- |
 | GINO cardiac model | Native CardiGINO implementation later | Synthetic activation-time prediction |
-| Graph-UNet cardiac model | Native CardiGNN implementation | Baseline against GINO |
+| Graph-UNet cardiac model | Native CardiGNN implementations | Geometry-aware baseline against GINO |
 | EP data processor | Native geometry/feature preprocessing contract | Shape-safe transforms and inverse transforms |
 | Mesh dataset loader | Provenance-aware CardiSim loader | Deterministic sample loading |
 | FEM-generated dataset | External dataset; store metadata/checksums, not bulk bytes | Published benchmark reproduction |
@@ -53,18 +53,35 @@ Missing optional VTK inputs are zero-filled as in the pinned upstream preprocess
 
 ## CardiGNN benchmark
 
-`cardisim.cardignn.CardiGNN` is a native GraphSAGE baseline. It does not copy the upstream Graph-UNet implementation, but it preserves the published GNN data contract: five pointwise features plus three spatial coordinates form the 8-channel model input, and the model predicts one activation-time value per node. Radius-based graph construction uses `r=0.5`; the training path uses a 32-neighbor cap and evaluation uses 128, matching the upstream neighborhood settings.
+`cardisim.cardignn.CardiGNN` is a native geometry-aware message-passing model with a selectable GraphSAGE baseline. It does not copy the upstream Graph-UNet implementation. Both variants preserve the published GNN data contract: five pointwise features plus three spatial coordinates form the 8-channel model input, and the model predicts one activation-time value per node.
 
-The bounded runner is:
+The geometry-aware default makes relative edge displacement and edge distance explicit in every message. Crucially, `graph_pos` remains in raw physical coordinates for radius-based graph construction, while standardized coordinates are used only as model features. This prevents normalization from silently changing the meaning of the published `r=0.5` neighborhood radius.
+
+The benchmark runner now uses deterministic case-level shuffling and a train/validation/test split. Normalization statistics are fitted only on training cases. The validation set controls model selection and early stopping; the held-out test set is evaluated only after the best validation epoch is selected. A training-set-mean baseline is reported for comparison.
+
+Examples:
 
 ```bash
 python scripts/train_cardignn.py \
   --shard artifacts/deepcardiosim/data_chunk_001.pt \
   --max-samples 64 \
-  --epochs 10
+  --epochs 20 \
+  --architecture spatial \
+  --hidden 64 \
+  --patience 5
 ```
 
-It creates a checkpoint and machine-readable metrics under `artifacts/cardignn/`. The split is deterministic by sample order after limiting the sample budget; this is a smoke/engineering benchmark, not a claim of exact reproduction of the published training protocol.
+The original plain GraphSAGE baseline remains selectable:
+
+```bash
+python scripts/train_cardignn.py \
+  --shard artifacts/deepcardiosim/data_chunk_001.pt \
+  --max-samples 64 \
+  --epochs 20 \
+  --architecture sage
+```
+
+Outputs are written under `artifacts/cardignn/` and are not part of the source or dataset release. The checkpoint records split indices, normalization statistics, model configuration, and best validation epoch so a run can be reconstructed without treating a test-set score as a tuning target.
 
 The GNN dependencies are optional:
 
@@ -72,13 +89,15 @@ The GNN dependencies are optional:
 pip install -e '.[gnn]'
 ```
 
-PyTorch Geometric currently documents `pip install torch_geometric` as the basic installation path, with extra extension packages optional for additional functionality. Its documentation also warns that CPU `radius_graph` with a neighbor cap can be quadrant-biased, so GPU execution is preferred for the substantive benchmark. citeturn243889search0turn243889search6
+PyTorch Geometric documents `torch_geometric` as the basic package and notes limitations around capped CPU radius-graph construction; substantive spatial experiments should therefore use a GPU when available. citeturn243889search0turn243889search6
 
 ## Colab boundary
 
-No GPU is required for repository CI, schema tests, inventory, or the real-LV parsing smoke test. A GPU becomes useful when training CardiGNN over many published cases or moving toward CardiGINO. The first user-side experiment should therefore be a Colab GPU run of `train_cardignn.py` on one processed shard with a small sample/epoch budget, followed by a larger controlled experiment only after the loss/metric behavior is verified.
+No GPU is required for repository CI, schema tests, inventory, or the real-LV parsing smoke test. A GPU becomes useful when training CardiGNN over many published cases or moving toward CardiGINO.
 
-Do not download all six training shards for the first experiment. Each processed shard is approximately 1 GB; start with one shard and keep the benchmark output separate from Git-tracked source.
+The first CardiGNN Colab run exposed a useful architectural failure mode: training loss decreased while held-out R² remained near zero/negative. That result is not treated as a model-quality claim because the initial runner both reused the test set for epoch-by-epoch selection and normalized the coordinates used for graph construction. The revised runner removes both confounders. The next user-side experiment should therefore be a single controlled GPU run using the `spatial` architecture, followed by comparison with `--architecture sage` only if the spatial model fails to beat the baseline.
+
+Do not download all six training shards for the first controlled experiment. Each processed shard is approximately 1 GB; start with one shard and keep benchmark output separate from Git-tracked source.
 
 ## Scientific benchmark contract
 
@@ -120,7 +139,7 @@ Added runtime Zenodo artifact inventory/checksum retrieval and a deterministic C
 
 ### Phase 4 — in progress
 
-Implemented the published-data adapter, VTK real-LV smoke path, and native CardiGNN baseline. CardiGINO remains the next model implementation because its published architecture depends on the neural-operator stack used by DeepCardioSim.
+Implemented the published-data adapter, VTK real-LV smoke path, geometry-aware CardiGNN baseline, bounded trainer with proper validation/test separation, and CI coverage. CardiGINO remains the next model implementation because its published architecture depends on the neural-operator stack used by DeepCardioSim.
 
 ### Phase 5
 
@@ -128,4 +147,4 @@ Promote the benchmark into CardiEval with synthetic, resolution-shift, perturbat
 
 ## Current status
 
-The provenance boundary, preprocessing layer, acquisition script, verified Zenodo inventory, VTK real-LV adapter, native CardiGNN model, bounded trainer, and CI coverage are committed. Main CI is green on Python 3.10–3.12, and the real-LV workflow has successfully downloaded, extracted, and converted a genuine published VTK case. The next substantive gate is a Colab GPU training run of the bounded CardiGNN benchmark; after that, implement and evaluate CardiGINO against the same locked data/evaluation protocol.
+The provenance boundary, preprocessing layer, acquisition script, verified Zenodo inventory, VTK real-LV adapter, native CardiGNN model, bounded trainer, and CI coverage are committed. The first GPU smoke run showed that the initial baseline could reduce training loss without reliable held-out generalization; the benchmark has now been corrected for physical-coordinate graph construction and test-set leakage. The next substantive gate is one controlled Colab GPU run of the revised `spatial` CardiGNN benchmark. CardiGINO should follow only after that run establishes a defensible baseline.
