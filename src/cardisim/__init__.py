@@ -4,6 +4,7 @@ from .atlas_bridge import calibrate_atlas_export, validate_atlas_manifest
 from .calibration import CalibrationResult, EmpiricalTrajectory, calibrate, calibration_from_csv, load_long_csv
 from .cohort_calibration import CohortCalibrationResult, CohortObservation, calibrate_cohort
 from .deepcardiosim import DEEPCARDIOSIM_REFERENCE, ReferenceRecord, deepcardiosim_reference
+from .deepcardiosim_data import DeepCardioSimSample
 from .dynamics import DynamicsParameters
 from .events import ChallengeEvent, EventSchedule
 from .geo_sources import SOURCES, GeoSource, download
@@ -27,7 +28,7 @@ __all__ = [
     "LongitudinalCalibrationResult", "calibrate_longitudinal", "CohortObservation",
     "CohortCalibrationResult", "calibrate_cohort", "module_scores", "mean_target",
     "ReferenceRecord", "DEEPCARDIOSIM_REFERENCE", "deepcardiosim_reference",
-    "EPPreprocessor", "UnitGaussianNormalizer",
+    "DeepCardioSimSample", "EPPreprocessor", "UnitGaussianNormalizer",
 ]
 
 __version__ = "0.3.0"
