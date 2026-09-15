@@ -35,6 +35,8 @@ def test_cardigino_contract_without_optional_dependency():
     with torch.no_grad():
         output = model(a, pos)
         query_output = model(a, pos, pos[:3])
+    assert config.in_channels == 5
+    assert model.point_lift[0].in_features == 14
     assert model.output_head[0].in_features == 17
     assert output.shape == (6, 1)
     assert query_output.shape == (3, 1)
