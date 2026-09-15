@@ -15,6 +15,7 @@ dependencies = ["numpy>=1.24"]
 [project.optional-dependencies]
 dev = ["pytest>=8.0", "ruff>=0.6,<0.7"]
 gnn = ["torch>=2.2", "torch-geometric>=2.3"]
+gino = ["torch>=2.2"]
 
 [project.scripts]
 cardisim = "cardisim.cli:main"
