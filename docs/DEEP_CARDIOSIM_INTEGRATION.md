@@ -17,14 +17,14 @@ DeepCardioSim is retained as an external scientific reference, not copied wholes
 
 | Reference component | CardiSim treatment | Validation target |
 | --- | --- | --- |
-| GINO cardiac model | Native CardiGINO implementation later | Synthetic activation-time prediction |
+| GINO cardiac model | Native CardiGINO implementation | Synthetic activation-time prediction |
 | Graph-UNet cardiac model | Native CardiGNN implementations | Geometry-aware baseline against GINO |
 | EP data processor | Native geometry/feature preprocessing contract | Shape-safe transforms and inverse transforms |
 | Mesh dataset loader | Provenance-aware CardiSim loader | Deterministic sample loading |
 | FEM-generated dataset | External dataset; store metadata/checksums, not bulk bytes | Published benchmark reproduction |
 | 2D/3D examples | Convert useful cases to small fixtures | CI smoke tests |
 | FEniCS container definitions | Reference reproducibility pattern | Simulator provenance |
-| neural operator core | Prefer maintained upstream dependencies where possible | Reproducible model construction |
+| neural operator core | Native bounded spectral operator for first CardiGINO benchmark | Reproducible model construction |
 
 ## Artifact inventory and retrieval
 
@@ -57,31 +57,23 @@ Missing optional VTK inputs are zero-filled as in the pinned upstream preprocess
 
 The geometry-aware default makes relative edge displacement and edge distance explicit in every message. Crucially, `graph_pos` remains in raw physical coordinates for radius-based graph construction, while standardized coordinates are used only as model features. This prevents normalization from silently changing the meaning of the published `r=0.5` neighborhood radius.
 
-The benchmark runner now uses deterministic case-level shuffling and a train/validation/test split. Normalization statistics are fitted only on training cases. The validation set controls model selection and early stopping; the held-out test set is evaluated only after the best validation epoch is selected. A training-set-mean baseline is reported for comparison.
+The benchmark runner uses deterministic case-level shuffling and a train/validation/test split. Normalization statistics are fitted only on training cases. The validation set controls model selection and early stopping; the held-out test set is evaluated only after the best validation epoch is selected. A training-set-mean baseline is reported for comparison.
+
+The revised spatial CardiGNN benchmark produced a held-out test R² of approximately 0.495 on 128 cases, with best validation R² approximately 0.564 at epoch 13. These numbers are an engineering benchmark result, not a claim of matching the published paper.
 
 Examples:
 
 ```bash
 python scripts/train_cardignn.py \
   --shard artifacts/deepcardiosim/data_chunk_001.pt \
-  --max-samples 64 \
+  --max-samples 128 \
   --epochs 20 \
   --architecture spatial \
   --hidden 64 \
   --patience 5
 ```
 
-The original plain GraphSAGE baseline remains selectable:
-
-```bash
-python scripts/train_cardignn.py \
-  --shard artifacts/deepcardiosim/data_chunk_001.pt \
-  --max-samples 64 \
-  --epochs 20 \
-  --architecture sage
-```
-
-Outputs are written under `artifacts/cardignn/` and are not part of the source or dataset release. The checkpoint records split indices, normalization statistics, model configuration, and best validation epoch so a run can be reconstructed without treating a test-set score as a tuning target.
+The original plain GraphSAGE baseline remains selectable with `--architecture sage`.
 
 The GNN dependencies are optional:
 
@@ -91,13 +83,55 @@ pip install -e '.[gnn]'
 
 PyTorch Geometric documents `torch_geometric` as the basic package and notes limitations around capped CPU radius-graph construction; substantive spatial experiments should therefore use a GPU when available. citeturn243889search0turn243889search6
 
+## CardiGINO benchmark
+
+`cardisim.cardigino.CardiGINO` is a native, bounded geometry-informed neural operator. It follows the important structural idea behind GINO: pointwise functions on arbitrary coordinates are lifted into a regular 3-D latent field, global spectral operator blocks process that latent field, and the latent representation is queried back at arbitrary output coordinates. The current implementation intentionally avoids requiring `neuraloperator`, Open3D, or torch-scatter for the first reproducible benchmark.
+
+The implementation uses differentiable trilinear splatting from point features into a regular cube, low-frequency 3-D Fourier convolutions plus local pointwise convolutions in latent space, and trilinear query back to requested points. The upstream GINO exposes analogous input-GNO, latent FNO, and output-GNO stages; the CardiSim implementation is a native approximation of that data flow rather than a source-code reproduction. citeturn566946view0turn566946view1
+
+The native GINO dependency is optional:
+
+```bash
+pip install -e '.[gino]'
+```
+
+For a clean Colab runtime, clone the repository first, then install the optional dependency and run the bounded trainer:
+
+```bash
+git clone --depth 1 https://github.com/Virelion-Biotech/Virelion-CardiSim.git
+cd Virelion-CardiSim
+python -m pip install -q -e '.[gino]'
+python - <<'PY'
+import torch
+print('PyTorch:', torch.__version__)
+print('CUDA available:', torch.cuda.is_available())
+if torch.cuda.is_available():
+    print('GPU:', torch.cuda.get_device_name(0))
+PY
+python scripts/inventory_deepcardiosim.py \
+  --download \
+  --artifact data_chunk_001.pt \
+  --output artifacts/deepcardiosim
+python scripts/train_cardigino.py \
+  --shard artifacts/deepcardiosim/data_chunk_001.pt \
+  --max-samples 64 \
+  --epochs 10 \
+  --hidden 32 \
+  --grid-size 16 \
+  --modes 8 8 8 \
+  --spectral-layers 4 \
+  --patience 4
+```
+
+Do not call `baseline_validation`, `final_test`, or `best_epoch` as Python variables. They are fields printed by the trainer's final JSON report and are also written to `artifacts/cardigino/metrics.json`.
+
+Do not download all six training shards for the first controlled experiment. Start with one shard and keep benchmark output separate from Git-tracked source.
+
 ## Colab boundary
 
-No GPU is required for repository CI, schema tests, inventory, or the real-LV parsing smoke test. A GPU becomes useful when training CardiGNN over many published cases or moving toward CardiGINO.
+No GPU is required for repository CI, schema tests, inventory, or the real-LV parsing smoke test. A GPU is strongly preferred for CardiGINO because its regular 3-D latent field and FFT blocks scale with the cube resolution and channel width.
 
-The first CardiGNN Colab run exposed a useful architectural failure mode: training loss decreased while held-out R² remained near zero/negative. That result is not treated as a model-quality claim because the initial runner both reused the test set for epoch-by-epoch selection and normalized the coordinates used for graph construction. The revised runner removes both confounders. The next user-side experiment should therefore be a single controlled GPU run using the `spatial` architecture, followed by comparison with `--architecture sage` only if the spatial model fails to beat the baseline.
-
-Do not download all six training shards for the first controlled experiment. Each processed shard is approximately 1 GB; start with one shard and keep benchmark output separate from Git-tracked source.
+The first CardiGINO run should be a 64-case, 16^3-grid smoke benchmark. It is intended to catch installation, tensor-shape, FFT, splatting, interpolation, and training-loop failures before any larger experiment. Only after that passes should the grid or case budget be increased.
 
 ## Scientific benchmark contract
 
@@ -113,7 +147,7 @@ The benchmark should report:
 8. separate evaluation on real LV geometries;
 9. a machine-readable report suitable for CardiEval.
 
-The published study compares GNN and GINO on synthetic cases, finer resolutions, Gaussian input perturbations, and two real-world LV cohorts. CardiEval should preserve these axes rather than collapsing validation to a random train/test split.
+The published GINO implementation uses GNO stages around a latent FNO representation and supports arbitrary output query points; those are the key structural axes preserved in the CardiSim native operator. citeturn566946view0turn566946view1
 
 ## Provenance rules
 
@@ -137,9 +171,9 @@ Implemented a NumPy-only `EPPreprocessor` and `UnitGaussianNormalizer` that esta
 
 Added runtime Zenodo artifact inventory/checksum retrieval and a deterministic CI fixture. The fixture is intentionally independent of network availability; live dataset retrieval remains an explicit acquisition operation.
 
-### Phase 4 — in progress
+### Phase 4 — complete
 
-Implemented the published-data adapter, VTK real-LV smoke path, geometry-aware CardiGNN baseline, bounded trainer with proper validation/test separation, and CI coverage. CardiGINO remains the next model implementation because its published architecture depends on the neural-operator stack used by DeepCardioSim.
+Implemented the published-data adapter, VTK real-LV smoke path, geometry-aware CardiGNN baseline, corrected train/validation/test benchmark split, and native bounded CardiGINO operator with clean-runtime trainer and tensor-level CI coverage.
 
 ### Phase 5
 
@@ -147,4 +181,4 @@ Promote the benchmark into CardiEval with synthetic, resolution-shift, perturbat
 
 ## Current status
 
-The provenance boundary, preprocessing layer, acquisition script, verified Zenodo inventory, VTK real-LV adapter, native CardiGNN model, bounded trainer, and CI coverage are committed. The first GPU smoke run showed that the initial baseline could reduce training loss without reliable held-out generalization; the benchmark has now been corrected for physical-coordinate graph construction and test-set leakage. The next substantive gate is one controlled Colab GPU run of the revised `spatial` CardiGNN benchmark. CardiGINO should follow only after that run establishes a defensible baseline.
+The provenance boundary, preprocessing layer, acquisition script, verified Zenodo inventory, VTK real-LV adapter, native CardiGNN benchmark, and native CardiGINO benchmark path are committed. The spatial CardiGNN has a useful first held-out result and is now the comparison baseline for CardiGINO. The next substantive gate is one fresh-runtime Colab GPU smoke run of `train_cardigino.py` before scaling the operator or attempting closer reproduction of the published GINO configuration.
