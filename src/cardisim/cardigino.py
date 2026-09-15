@@ -117,13 +117,15 @@ if nn is not None:
     class CardiGINO(nn.Module):
         """Native geometry-informed neural operator for point-cloud fields."""
 
+        QUERY_EMBED_CHANNELS = 9
+
         def __init__(self, config: CardiGINOConfig | None = None) -> None:
             super().__init__()
             self.config = config or CardiGINOConfig()
             _validate_config(self.config)
             c = self.config.hidden_channels
             self.point_lift = nn.Sequential(
-                nn.Linear(self.config.in_channels + 6, c),
+                nn.Linear(self.config.in_channels + self.QUERY_EMBED_CHANNELS, c),
                 nn.GELU(),
                 nn.Linear(c, c),
             )
@@ -132,7 +134,7 @@ if nn is not None:
                 for _ in range(self.config.spectral_layers)
             )
             self.output_head = nn.Sequential(
-                nn.Linear(c + 6, c),
+                nn.Linear(c + self.QUERY_EMBED_CHANNELS, c),
                 nn.GELU(),
                 nn.Linear(c, self.config.out_channels),
             )
