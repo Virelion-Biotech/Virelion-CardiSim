@@ -1,0 +1,38 @@
+{
+  "benchmark": "CardiGNN geometry-aware bounded benchmark",
+  "date": "2026-09-15",
+  "architecture": "spatial",
+  "source_shard": "data_chunk_001.pt",
+  "max_samples": 128,
+  "epochs_requested": 20,
+  "epochs_completed": 18,
+  "best_epoch": 13,
+  "train_cases": 90,
+  "validation_cases": 19,
+  "test_cases": 19,
+  "device": "cuda",
+  "baseline_validation": {
+    "mae": 15.995251655578613,
+    "rmse": 19.546671255682753,
+    "r2": -0.05468924321512891
+  },
+  "final_test": {
+    "mae": 11.573097229003906,
+    "rmse": 16.283351067045636,
+    "r2": 0.4953674465683757
+  },
+  "best_validation": {
+    "epoch": 13,
+    "mae": 9.61999225616455,
+    "rmse": 12.560472011565501,
+    "r2": 0.5644973228752044
+  },
+  "provenance": {
+    "reference_manifest": "data/references/deepcardiosim.json",
+    "reference_commit": "a0b271a9aee84fd7b6299602dd4dbf8a3a01698f",
+    "zenodo_record": "17651628",
+    "checkpoint_retained_outside_git": true,
+    "checkpoint_filename": "cardignn.pt"
+  },
+  "notes": "Result is a bounded engineering benchmark of the native CardiSim implementation; it is not a claim of exact reproduction of the published DeepCardioSim training protocol."
+}
