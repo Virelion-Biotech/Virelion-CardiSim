@@ -11,11 +11,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-try:
+try:  # Optional dependency.
     import torch
+    import torch.nn.functional as F
     from torch import nn
 except ImportError:  # pragma: no cover - optional dependency
     torch = None
+    F = None
     nn = None
 
 
@@ -107,7 +109,7 @@ if nn is not None:
         def forward(self, x):
             residual = x
             x = self.spectral(x) + self.local(x)
-            x = torch.gelu(x)
+            x = F.gelu(x)
             x = self.mlp(x)
             return self.norm(x + residual)
 
@@ -151,29 +153,27 @@ if nn is not None:
             return low, high, frac
 
         def _splat(self, values, coords):
-            n = coords.shape[0]
             d = self.config.grid_size
             grid = values.new_zeros(1, values.shape[1], d, d, d)
             density = values.new_zeros(1, 1, d, d, d)
             x0, x1, fx = self._index_weights(coords[:, 0], d)
             y0, y1, fy = self._index_weights(coords[:, 1], d)
             z0, z1, fz = self._index_weights(coords[:, 2], d)
+            flat = grid.view(1, values.shape[1], -1)
+            flat_density = density.view(1, 1, -1)
             for ix, wx in ((x0, 1 - fx), (x1, fx)):
                 for iy, wy in ((y0, 1 - fy), (y1, fy)):
                     for iz, wz in ((z0, 1 - fz), (z1, fz)):
                         weight = wx * wy * wz
-                        linear = ix * d * d + iy * d + iz
-                        flat = grid.view(1, values.shape[1], -1)
+                        linear = iz * d * d + iy * d + ix
                         flat.index_add_(2, linear, (values * weight[:, None]).T[None])
-                        density.view(1, 1, -1).index_add_(
-                            2, linear, weight[None, None]
-                        )
+                        flat_density.index_add_(2, linear, weight[None, None])
             return grid / density.clamp_min(1e-6)
 
         def _query(self, field, coords):
+            # grid_sample expects its last coordinate as x/y/z = W/H/D.
             grid = coords.view(1, -1, 1, 1, 3) * 2 - 1
-            grid = grid[..., [2, 1, 0]]
-            sampled = torch.nn.functional.grid_sample(
+            sampled = F.grid_sample(
                 field,
                 grid,
                 mode="bilinear",
