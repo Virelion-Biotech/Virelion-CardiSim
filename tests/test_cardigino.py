@@ -35,9 +35,11 @@ def test_cardigino_contract_without_optional_dependency():
     with torch.no_grad():
         output = model(a, pos)
         query_output = model(a, pos, pos[:3])
+    assert model.output_head[0].in_features == 17
     assert output.shape == (6, 1)
     assert query_output.shape == (3, 1)
     assert bool(torch.isfinite(output).all())
+    assert bool(torch.isfinite(query_output).all())
 
 
 def test_cardigino_sample_contract():
