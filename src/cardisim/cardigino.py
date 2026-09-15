@@ -25,7 +25,10 @@ except ImportError:  # pragma: no cover - optional dependency
 class CardiGINOConfig:
     """Configuration for the bounded native CardiGINO benchmark."""
 
-    in_channels: int = 8
+    # DeepCardioSim ``a`` contains the five pointwise physical features:
+    # pacing flag, isotropic conductivity, and 3 myofiber-direction components.
+    # The three spatial coordinates are supplied separately as ``input_geom``.
+    in_channels: int = 5
     out_channels: int = 1
     hidden_channels: int = 32
     spectral_layers: int = 4
@@ -35,8 +38,8 @@ class CardiGINOConfig:
 
 
 def _validate_config(config: CardiGINOConfig) -> None:
-    if config.in_channels != 8:
-        raise ValueError("DeepCardioSim benchmark contract requires 8 input channels")
+    if config.in_channels != 5:
+        raise ValueError("DeepCardioSim point-feature contract requires 5 input channels")
     if config.out_channels != 1:
         raise ValueError("cardiac activation benchmark currently expects 1 output")
     if config.hidden_channels < 4:
@@ -117,7 +120,7 @@ if nn is not None:
     class CardiGINO(nn.Module):
         """Native geometry-informed neural operator for point-cloud fields."""
 
-        QUERY_EMBED_CHANNELS = 9
+        COORDINATE_EMBED_CHANNELS = 9
 
         def __init__(self, config: CardiGINOConfig | None = None) -> None:
             super().__init__()
@@ -125,7 +128,7 @@ if nn is not None:
             _validate_config(self.config)
             c = self.config.hidden_channels
             self.point_lift = nn.Sequential(
-                nn.Linear(self.config.in_channels + self.QUERY_EMBED_CHANNELS, c),
+                nn.Linear(self.config.in_channels + self.COORDINATE_EMBED_CHANNELS, c),
                 nn.GELU(),
                 nn.Linear(c, c),
             )
@@ -134,7 +137,7 @@ if nn is not None:
                 for _ in range(self.config.spectral_layers)
             )
             self.output_head = nn.Sequential(
-                nn.Linear(c + self.QUERY_EMBED_CHANNELS, c),
+                nn.Linear(c + self.COORDINATE_EMBED_CHANNELS, c),
                 nn.GELU(),
                 nn.Linear(c, self.config.out_channels),
             )
