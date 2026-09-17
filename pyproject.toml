@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "virelion-cardisim"
-version = "0.3.0"
-description = "Synthetic cardiac-cell and phenotype trajectory simulator with empirical calibration support."
+version = "0.4.0"
+description = "Synthetic cardiac-cell and cardiac-phenotype trajectory simulator with empirical calibration support."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "AGPL-3.0-or-later"}
