@@ -40,7 +40,7 @@ A Tesla T4-class GPU is recommended for the 3-D spectral operator. The runner ex
 
 ## Why the split seed is fixed
 
-`--split-seed` determines the train/validation/test population and is deliberately kept constant across model seeds. `--seeds` controls model initialization and training-order shuffling within that fixed population.
+`--split-seed` determines the train/validation/test population and is deliberately kept constant across model seeds. `--seeds` controls model initialization and deterministic training-order shuffling within that fixed population.
 
 The resulting comparison is therefore paired by seed on the same held-out cases.
 
