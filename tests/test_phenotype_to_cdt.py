@@ -4,19 +4,24 @@ from cardisim import (
     CDT_PARAMETER_NAMES,
     CardiacState,
     fit_phenotype_to_cdt,
+    load_profile,
     uncalibrated_cdt_prior,
     validate_phenotype_to_cdt,
 )
 from cardisim.models import N_FEATURES
 
 
-def test_uncalibrated_prior_is_explicit_and_bounded():
+def test_uncalibrated_prior_is_explicit_and_bounded(tmp_path):
     state = CardiacState(np.full((4, N_FEATURES), 0.5))
     profile = uncalibrated_cdt_prior()
     values = profile.transform(state)
     assert profile.calibration_status == "uncalibrated"
     assert set(values) == set(CDT_PARAMETER_NAMES)
     assert values["apd_max"] >= values["apd_min"]
+    path = tmp_path / "profile.json"
+    profile.save_json(path)
+    restored = load_profile(path)
+    assert restored.to_dict() == profile.to_dict()
 
 
 def test_fit_and_validate_phenotype_to_cdt():
