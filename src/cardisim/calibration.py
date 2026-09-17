@@ -155,6 +155,15 @@ class BootstrapParameterEnsemble:
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(json.dumps(self.summary(), indent=2), encoding="utf-8")
 
+    def simulate(self, config, schedule=None, initial=None) -> tuple[object, ...]:
+        """Run each bootstrap parameter set under the same simulator configuration."""
+        from .simulate import CardiacSimulator
+
+        return tuple(
+            CardiacSimulator(config, dynamics=parameters).run(schedule, initial=initial)
+            for parameters in self.parameters
+        )
+
 
 def _quantile_summary(values: np.ndarray, quantiles: tuple[float, float, float]) -> dict[str, object]:
     q = np.quantile(values, quantiles, axis=0)
