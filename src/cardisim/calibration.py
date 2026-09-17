@@ -131,8 +131,8 @@ class BootstrapParameterEnsemble:
     def summary(self, quantiles: tuple[float, float, float] = (0.025, 0.5, 0.975)) -> dict[str, object]:
         if not self.parameters:
             raise ValueError("parameter ensemble is empty")
-        lo, median, hi = quantiles
-        if not 0 <= lo <= median <= hi <= 1:
+        low, median, high = quantiles
+        if not 0 <= low <= median <= high <= 1:
             raise ValueError("quantiles must satisfy 0 <= low <= median <= high <= 1")
         intercept = np.stack([p.intercept for p in self.parameters])
         matrix = np.stack([p.state_matrix for p in self.parameters])
@@ -165,9 +165,7 @@ def _transition_design(data: EmpiricalTrajectory) -> tuple[np.ndarray, np.ndarra
     dt = np.diff(data.times)
     x = data.values[:-1].reshape(-1, N_FEATURES)
     y = (np.diff(data.values, axis=0) / dt[:, None, None]).reshape(-1, N_FEATURES)
-    forcing = None
-    if data.forcing is not None:
-        forcing = np.repeat(data.forcing[:-1], data.values.shape[1], axis=0)
+    forcing = None if data.forcing is None else np.repeat(data.forcing[:-1], data.values.shape[1], axis=0)
     return x, y, forcing
 
 
@@ -291,7 +289,6 @@ def calibrate_subject_holdout(
     train_data = _subset_by_subjects(data, train_subjects)
     test_data = _subset_by_subjects(data, test_subjects)
     fit = calibrate(train_data, regularization=regularization)
-
     x, y, forcing = _transition_design(test_data)
     predicted = fit.parameters.intercept[None, :] + x @ fit.parameters.state_matrix.T
     if forcing is not None:
@@ -333,8 +330,6 @@ def bootstrap_calibrate(
     fitted: list[DynamicsParameters] = []
     for _ in range(n_bootstrap):
         sampled = rng.choice(subjects, size=len(subjects), replace=True)
-        masks = np.logical_or.reduce([row_subjects == subject for subject in sampled])
-        # Preserve multiplicity of sampled subjects by concatenating each subject's rows.
         index_blocks = [np.flatnonzero(row_subjects == subject) for subject in sampled]
         indices = np.concatenate(index_blocks)
         sampled_x = x[indices]
@@ -351,7 +346,6 @@ def bootstrap_calibrate(
                 source=f"bootstrap:{data.study_id}:{data.dataset_id}",
             )
         )
-        del masks
     return BootstrapParameterEnsemble(
         parameters=tuple(fitted),
         dataset_id=data.dataset_id,
