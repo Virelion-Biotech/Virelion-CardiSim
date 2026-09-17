@@ -1,7 +1,7 @@
 """Composable challenge and intervention events."""
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from typing import Mapping
 
 import numpy as np
@@ -19,6 +19,10 @@ class ChallengeEvent:
     increases the state; negative forcing decreases it. The default ``sin2``
     kernel preserves the original smooth zero-at-boundary behavior. ``box`` and
     ``gaussian`` are available for calibrated challenge-response experiments.
+
+    ``recovery`` is an attenuation multiplier on active forcing, not a separate
+    post-event recovery trajectory. Post-event recovery can be represented with
+    another scheduled event.
     """
 
     name: str
@@ -71,6 +75,12 @@ class ChallengeEvent:
             vector[FEATURE_INDEX[name]] = amp * value * self.recovery
         return vector
 
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON-compatible event definition for reproducibility manifests."""
+        payload = asdict(self)
+        payload["effects"] = {str(key): float(value) for key, value in self.effects.items()}
+        return payload
+
 
 @dataclass(frozen=True)
 class EventSchedule:
@@ -95,6 +105,10 @@ class EventSchedule:
 
     def names(self) -> list[str]:
         return [event.name for event in self.events]
+
+    def specs(self) -> list[dict[str, object]]:
+        """Return complete serialized definitions for all scheduled events."""
+        return [event.to_dict() for event in self.events]
 
     def __iter__(self):
         return iter(self.events)
