@@ -22,9 +22,19 @@ def _canonical_json(payload: object) -> bytes:
     return json.dumps(payload, sort_keys=True, separators=(",", ":"), default=str).encode("utf-8")
 
 
+def _array_fingerprint(*arrays: np.ndarray) -> str:
+    digest = hashlib.sha256()
+    for array in arrays:
+        value = np.ascontiguousarray(array)
+        digest.update(str(value.dtype).encode("utf-8"))
+        digest.update(str(value.shape).encode("utf-8"))
+        digest.update(value.tobytes())
+    return digest.hexdigest()
+
+
 @dataclass
 class SimulationResult:
-    """Full population trajectory with provenance and reproducibility metadata."""
+    """Full population trajectory with reproducibility and provenance metadata."""
 
     time: np.ndarray
     values: np.ndarray
@@ -33,6 +43,9 @@ class SimulationResult:
     events: tuple[str, ...]
     dynamics_source: str = "default"
     initialization: str = "baseline+heterogeneity"
+    event_specs: tuple[dict[str, object], ...] = ()
+    initial_state_fingerprint: str = ""
+    dynamics_fingerprint: str = ""
 
     def __post_init__(self) -> None:
         self.time = np.asarray(self.time, dtype=float)
@@ -57,15 +70,17 @@ class SimulationResult:
     def initial(self) -> CardiacState:
         return CardiacState(self.values[0], self.cell_ids)
 
-    def mean_trajectory(self) -> dict[str, np.ndarray]:
-        means = self.values.mean(axis=1)
-        return {name: means[:, i] for i, name in enumerate(PHENOTYPES)}
-
     def fingerprint(self) -> str:
         """Return a deterministic SHA-256 fingerprint of configuration and trajectory."""
         digest = hashlib.sha256()
-        digest.update(_canonical_json({
-            "version": SIMULATION_RESULT_VERSION,
+        digest.update(_canonical_json(self.reproducibility_manifest(include_result_fingerprint=False)))
+        digest.update(_array_fingerprint(self.time, self.cell_ids.astype(str), self.values).encode("utf-8"))
+        return digest.hexdigest()
+
+    def reproducibility_manifest(self, *, include_result_fingerprint: bool = True) -> dict[str, Any]:
+        """Return all metadata required to identify the simulation inputs and outputs."""
+        manifest: dict[str, Any] = {
+            "result_version": SIMULATION_RESULT_VERSION,
             "config": {
                 "duration": self.config.duration,
                 "dt": self.config.dt,
@@ -76,15 +91,17 @@ class SimulationResult:
                 "clamp_states": self.config.clamp_states,
             },
             "events": list(self.events),
+            "event_specs": [dict(spec) for spec in self.event_specs],
             "dynamics_source": self.dynamics_source,
+            "dynamics_fingerprint": self.dynamics_fingerprint,
             "initialization": self.initialization,
-        }))
-        for array in (self.time, self.cell_ids.astype(str), self.values):
-            contiguous = np.ascontiguousarray(array)
-            digest.update(str(contiguous.dtype).encode("utf-8"))
-            digest.update(str(contiguous.shape).encode("utf-8"))
-            digest.update(contiguous.tobytes())
-        return digest.hexdigest()
+            "initial_state_fingerprint": self.initial_state_fingerprint,
+            "phenotypes": list(PHENOTYPES),
+            "cell_ids": [str(x) for x in self.cell_ids],
+        }
+        if include_result_fingerprint:
+            manifest["fingerprint"] = self.fingerprint()
+        return manifest
 
     def cdt_parameters(self, profile=None) -> dict[str, float]:
         """Translate the final phenotype state through an explicit CDT mapping profile."""
@@ -109,8 +126,11 @@ class SimulationResult:
             "duration": float(self.time[-1]),
             "dt_nominal": float(self.config.dt),
             "events": list(self.events),
+            "event_specs": [dict(spec) for spec in self.event_specs],
             "dynamics_source": self.dynamics_source,
+            "dynamics_fingerprint": self.dynamics_fingerprint,
             "initialization": self.initialization,
+            "initial_state_fingerprint": self.initial_state_fingerprint,
             "initial": initial_mean,
             "final": final_mean,
             "final_population_std": final_std,
@@ -134,7 +154,9 @@ class SimulationResult:
         payload = {
             "version": SIMULATION_RESULT_VERSION,
             "dynamics_source": self.dynamics_source,
+            "dynamics_fingerprint": self.dynamics_fingerprint,
             "initialization": self.initialization,
+            "initial_state_fingerprint": self.initial_state_fingerprint,
             "config": {
                 "duration": self.config.duration,
                 "dt": self.config.dt,
@@ -146,6 +168,7 @@ class SimulationResult:
             },
             "phenotypes": list(PHENOTYPES),
             "events": list(self.events),
+            "event_specs": [dict(spec) for spec in self.event_specs],
             "cell_ids": [str(x) for x in self.cell_ids],
             "time": self.time.tolist(),
             "values": self.values.tolist(),
@@ -165,6 +188,12 @@ class CardiacSimulator:
 
     def _default_cell_ids(self) -> np.ndarray:
         return np.array([f"cell_{i:06d}" for i in range(self.config.n_cells)])
+
+    @staticmethod
+    def _dynamics_fingerprint(dynamics: DynamicsParameters | None) -> str:
+        if dynamics is None:
+            return "default"
+        return _array_fingerprint(dynamics.intercept, dynamics.state_matrix, dynamics.forcing_matrix)
 
     def initial_population(
         self,
@@ -206,6 +235,7 @@ class CardiacSimulator:
         rng = np.random.default_rng(self.config.seed)
         times = self.config.time
         state, cell_ids, initialization = self.initial_population(rng, initial)
+        initial_fingerprint = _array_fingerprint(state.values, cell_ids.astype(str))
         trajectory = np.empty((len(times), self.config.n_cells, N_FEATURES), dtype=float)
         trajectory[0] = state.values
         for i in range(1, len(times)):
@@ -227,6 +257,9 @@ class CardiacSimulator:
             tuple(schedule.names()),
             self.dynamics.source if self.dynamics else "default",
             initialization,
+            tuple(schedule.specs()),
+            initial_fingerprint,
+            self._dynamics_fingerprint(self.dynamics),
         )
 
 
