@@ -6,13 +6,14 @@ import json
 from pathlib import Path
 
 from .models import SimulationConfig
+from .phenotype_to_cdt import load_profile, uncalibrated_cdt_prior
 from .presets import preset_names, population_preset
 from .simulate import CardiacSimulator
 from .target_derivation import write_long_targets
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="cardisim", description="Synthetic cardiac trajectory simulator")
+    parser = argparse.ArgumentParser(prog="cardisim", description="Synthetic cardiac phenotype trajectory simulator")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sim = sub.add_parser("simulate", help="run a population simulation")
@@ -25,6 +26,9 @@ def build_parser() -> argparse.ArgumentParser:
     sim.add_argument("--noise", type=float, default=0.003)
     sim.add_argument("--output", type=Path, required=True)
     sim.add_argument("--format", choices=("csv", "json"), default="csv")
+    sim.add_argument("--initial-json", type=Path, help="JSON phenotype mapping used as the initial population mean")
+    sim.add_argument("--cdt-output", type=Path, help="write CDT parameters derived from the final phenotype state")
+    sim.add_argument("--cdt-profile", type=Path, help="JSON phenotype-to-CDT profile; defaults to an explicit uncalibrated prior")
 
     derive = sub.add_parser("derive-targets", help="derive latent phenotype targets from expression CSV")
     derive.add_argument("--expression", type=Path, required=True)
@@ -38,6 +42,12 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "simulate":
+        initial = None
+        if args.initial_json is not None:
+            payload = json.loads(args.initial_json.read_text(encoding="utf-8"))
+            if not isinstance(payload, dict):
+                raise ValueError("--initial-json must contain a JSON object")
+            initial = payload.get("phenotype_mean", payload)
         config = SimulationConfig(
             duration=args.days,
             dt=args.dt,
@@ -46,11 +56,21 @@ def main(argv: list[str] | None = None) -> int:
             heterogeneity=args.heterogeneity,
             process_noise=args.noise,
         )
-        result = CardiacSimulator(config).run(population_preset(args.preset))
+        result = CardiacSimulator(config).run(population_preset(args.preset), initial=initial)
         if args.format == "csv":
             result.to_csv(args.output)
         else:
             result.to_json(args.output)
+        if args.cdt_output is not None:
+            profile = load_profile(args.cdt_profile) if args.cdt_profile is not None else uncalibrated_cdt_prior()
+            payload = {
+                "profile": profile.to_dict(),
+                "parameters": result.cdt_parameters(profile),
+                "simulation_fingerprint": result.fingerprint(),
+                "warning": "Only empirically calibrated profiles should be interpreted as phenotype-dependent biological mappings.",
+            }
+            args.cdt_output.parent.mkdir(parents=True, exist_ok=True)
+            args.cdt_output.write_text(json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8")
         print(json.dumps(result.summary(), indent=2))
         return 0
 
