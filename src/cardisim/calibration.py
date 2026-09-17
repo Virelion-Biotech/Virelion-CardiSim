@@ -115,6 +115,52 @@ class SubjectHoldoutCalibration:
     report: SubjectHoldoutReport
 
 
+@dataclass(frozen=True)
+class BootstrapParameterEnsemble:
+    """Subject-bootstrap parameter ensemble for uncertainty quantification."""
+
+    parameters: tuple[DynamicsParameters, ...]
+    dataset_id: str
+    study_id: str
+    n_subjects: int
+    n_bootstrap: int
+    seed: int
+    regularization: float
+    note: str = "Bootstrap variability across biological subjects; not a Bayesian posterior."
+
+    def summary(self, quantiles: tuple[float, float, float] = (0.025, 0.5, 0.975)) -> dict[str, object]:
+        if not self.parameters:
+            raise ValueError("parameter ensemble is empty")
+        lo, median, hi = quantiles
+        if not 0 <= lo <= median <= hi <= 1:
+            raise ValueError("quantiles must satisfy 0 <= low <= median <= high <= 1")
+        intercept = np.stack([p.intercept for p in self.parameters])
+        matrix = np.stack([p.state_matrix for p in self.parameters])
+        forcing = np.stack([p.forcing_matrix for p in self.parameters])
+        return {
+            "dataset_id": self.dataset_id,
+            "study_id": self.study_id,
+            "n_subjects": self.n_subjects,
+            "n_bootstrap": self.n_bootstrap,
+            "seed": self.seed,
+            "regularization": self.regularization,
+            "note": self.note,
+            "intercept": _quantile_summary(intercept, quantiles),
+            "state_matrix": _quantile_summary(matrix, quantiles),
+            "forcing_matrix": _quantile_summary(forcing, quantiles),
+        }
+
+    def save_json(self, path: str | Path) -> None:
+        output = Path(path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(self.summary(), indent=2), encoding="utf-8")
+
+
+def _quantile_summary(values: np.ndarray, quantiles: tuple[float, float, float]) -> dict[str, object]:
+    q = np.quantile(values, quantiles, axis=0)
+    return {"q_low": q[0].tolist(), "q50": q[1].tolist(), "q_high": q[2].tolist()}
+
+
 def _transition_design(data: EmpiricalTrajectory) -> tuple[np.ndarray, np.ndarray, np.ndarray | None]:
     dt = np.diff(data.times)
     x = data.values[:-1].reshape(-1, N_FEATURES)
@@ -217,22 +263,8 @@ def calibrate(data: EmpiricalTrajectory, regularization: float = 1e-3) -> Calibr
     rmse, r2 = _report_metrics(y, predicted)
     state_matrix = theta[1 : 1 + N_FEATURES]
     forcing_matrix = theta[1 + N_FEATURES :] if forcing is not None else np.eye(N_FEATURES)
-    params = DynamicsParameters(
-        theta[0],
-        state_matrix,
-        forcing_matrix,
-        source=f"{data.study_id}:{data.dataset_id}",
-    )
-    report = CalibrationReport(
-        data.dataset_id,
-        data.study_id,
-        len(data.cell_ids),
-        len(data.times),
-        len(x),
-        rmse,
-        r2,
-        regularization,
-    )
+    params = DynamicsParameters(theta[0], state_matrix, forcing_matrix, source=f"{data.study_id}:{data.dataset_id}")
+    report = CalibrationReport(data.dataset_id, data.study_id, len(data.cell_ids), len(data.times), len(x), rmse, r2, regularization)
     return CalibrationResult(params, report)
 
 
@@ -278,6 +310,57 @@ def calibrate_subject_holdout(
         regularization=regularization,
     )
     return SubjectHoldoutCalibration(fit, report)
+
+
+def bootstrap_calibrate(
+    data: EmpiricalTrajectory,
+    *,
+    n_bootstrap: int = 100,
+    seed: int = 42,
+    regularization: float = 1e-3,
+) -> BootstrapParameterEnsemble:
+    """Generate subject-resampled dynamics parameters for uncertainty analysis."""
+    if n_bootstrap < 2:
+        raise ValueError("n_bootstrap must be >= 2")
+    if regularization < 0:
+        raise ValueError("regularization must be non-negative")
+    subjects = np.asarray(sorted(set(data.subject_ids)), dtype=object)
+    if len(subjects) < 3:
+        raise ValueError("at least 3 distinct subjects are required for bootstrap calibration")
+    x, y, forcing = _transition_design(data)
+    row_subjects = np.tile(np.asarray(data.subject_ids, dtype=object), len(data.times) - 1)
+    rng = np.random.default_rng(seed)
+    fitted: list[DynamicsParameters] = []
+    for _ in range(n_bootstrap):
+        sampled = rng.choice(subjects, size=len(subjects), replace=True)
+        masks = np.logical_or.reduce([row_subjects == subject for subject in sampled])
+        # Preserve multiplicity of sampled subjects by concatenating each subject's rows.
+        index_blocks = [np.flatnonzero(row_subjects == subject) for subject in sampled]
+        indices = np.concatenate(index_blocks)
+        sampled_x = x[indices]
+        sampled_y = y[indices]
+        sampled_forcing = None if forcing is None else forcing[indices]
+        theta, _ = _fit_linear(sampled_x, sampled_y, sampled_forcing, regularization)
+        state_matrix = theta[1 : 1 + N_FEATURES]
+        forcing_matrix = theta[1 + N_FEATURES :] if sampled_forcing is not None else np.eye(N_FEATURES)
+        fitted.append(
+            DynamicsParameters(
+                theta[0],
+                state_matrix,
+                forcing_matrix,
+                source=f"bootstrap:{data.study_id}:{data.dataset_id}",
+            )
+        )
+        del masks
+    return BootstrapParameterEnsemble(
+        parameters=tuple(fitted),
+        dataset_id=data.dataset_id,
+        study_id=data.study_id,
+        n_subjects=len(subjects),
+        n_bootstrap=n_bootstrap,
+        seed=seed,
+        regularization=regularization,
+    )
 
 
 def calibration_from_csv(path: str | Path, dataset_id: str, study_id: str, regularization: float = 1e-3) -> CalibrationResult:
