@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://virelionbiotech.net/schemas/cardiac-phenotype-state-1.0.0.json",
+  "title": "CardiSim canonical cardiac phenotype state",
+  "type": "object",
+  "required": ["phenotypes"],
+  "properties": {
+    "cell_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "phenotypes": {
+      "type": "object",
+      "required": ["maturity", "contractility", "calcium_handling", "electrophysiology", "metabolism", "hypertrophy", "fibrosis", "inflammation", "angiogenesis", "viability", "oxidative_stress", "mitochondrial_health"],
+      "additionalProperties": false,
+      "properties": {
+        "maturity": {"$ref": "#/$defs/vector"},
+        "contractility": {"$ref": "#/$defs/vector"},
+        "calcium_handling": {"$ref": "#/$defs/vector"},
+        "electrophysiology": {"$ref": "#/$defs/vector"},
+        "metabolism": {"$ref": "#/$defs/vector"},
+        "hypertrophy": {"$ref": "#/$defs/vector"},
+        "fibrosis": {"$ref": "#/$defs/vector"},
+        "inflammation": {"$ref": "#/$defs/vector"},
+        "angiogenesis": {"$ref": "#/$defs/vector"},
+        "viability": {"$ref": "#/$defs/vector"},
+        "oxidative_stress": {"$ref": "#/$defs/vector"},
+        "mitochondrial_health": {"$ref": "#/$defs/vector"}
+      }
+    }
+  },
+  "$defs": {
+    "vector": {
+      "type": "array",
+      "items": {"type": "number", "minimum": 0, "maximum": 1}
+    }
+  }
+}
