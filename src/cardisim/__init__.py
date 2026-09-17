@@ -2,10 +2,12 @@
 
 from .atlas_bridge import calibrate_atlas_export, validate_atlas_manifest
 from .calibration import (
+    BootstrapParameterEnsemble,
     CalibrationResult,
     EmpiricalTrajectory,
     SubjectHoldoutCalibration,
     SubjectHoldoutReport,
+    bootstrap_calibrate,
     calibrate,
     calibrate_subject_holdout,
     calibration_from_csv,
@@ -41,6 +43,7 @@ from .uncertainty import PhenotypeSpread, ensemble_final_means, state_spread
 from .validation import ConvergenceReport, DynamicsStabilityReport, TrajectoryDiagnostics, diagnose_result, dynamics_stability, timestep_convergence
 
 __all__ = [
+    "BootstrapParameterEnsemble",
     "CDT_PARAMETER_NAMES",
     "DEEPCARDIOSIM_REFERENCE",
     "DEFAULT_PARAMETERS",
@@ -76,17 +79,18 @@ __all__ = [
     "SubjectHoldoutReport",
     "TrajectoryDiagnostics",
     "UnitGaussianNormalizer",
+    "bootstrap_calibrate",
     "calibrate",
     "calibrate_atlas_export",
     "calibrate_cohort",
     "calibrate_longitudinal",
     "calibrate_subject_holdout",
     "calibration_from_csv",
-    "diagnose_result",
-    "dynamics_stability",
-    "download",
     "deepcardiosim_reference",
     "derive_targets",
+    "diagnose_result",
+    "download",
+    "dynamics_stability",
     "ensemble_final_means",
     "fit_phenotype_to_cdt",
     "health_score",
