@@ -10,7 +10,9 @@ parameter. Users can fit phenotype-dependent rules from paired empirical data.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from pathlib import Path
 from typing import Mapping, Sequence
+import json
 
 import numpy as np
 
@@ -107,7 +109,7 @@ class PhenotypeToCDTProfile:
             phenotype_mean = state.mean()
         else:
             phenotype_mean = {name: float(state[name]) for name in PHENOTYPES}
-        values = {name: rule.apply(phenotype_mean) for name, rule in self.rules.items()}
+        values = {name: self.rules[name].apply(phenotype_mean) for name in CDT_PARAMETER_NAMES}
         if values["apd_max"] < values["apd_min"]:
             raise ValueError("mapped APD bounds violate apd_max >= apd_min")
         return values
@@ -130,6 +132,12 @@ class PhenotypeToCDTProfile:
             },
         }
 
+    def save_json(self, path: str | Path) -> None:
+        """Persist this mapping profile as a reviewable JSON artifact."""
+        output = Path(path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        output.write_text(json.dumps(self.to_dict(), indent=2, sort_keys=True), encoding="utf-8")
+
 
 @dataclass(frozen=True)
 class MappingFitReport:
@@ -145,6 +153,37 @@ class MappingFitReport:
 
     def to_dict(self) -> dict[str, object]:
         return asdict(self)
+
+
+def profile_from_dict(payload: Mapping[str, object]) -> PhenotypeToCDTProfile:
+    """Reconstruct and validate a mapping profile from JSON-compatible data."""
+    raw_rules = payload.get("rules")
+    if not isinstance(raw_rules, Mapping):
+        raise ValueError("profile payload requires a rules mapping")
+    rules: dict[str, CDTParameterRule] = {}
+    for name in CDT_PARAMETER_NAMES:
+        raw = raw_rules.get(name)
+        if not isinstance(raw, Mapping):
+            raise ValueError(f"profile rule for {name} is missing or invalid")
+        rules[name] = CDTParameterRule(
+            base=float(raw["base"]),
+            lower=float(raw["lower"]),
+            upper=float(raw["upper"]),
+            weights={str(k): float(v) for k, v in dict(raw.get("weights") or {}).items()},
+        )
+    return PhenotypeToCDTProfile(
+        profile_id=str(payload["profile_id"]),
+        version=str(payload["version"]),
+        calibration_status=str(payload.get("calibration_status", "unknown")),
+        rules=rules,
+        source=str(payload.get("source", "unknown")),
+        notes=str(payload.get("notes", "")),
+    )
+
+
+def load_profile(path: str | Path) -> PhenotypeToCDTProfile:
+    """Load and validate a serialized phenotype-to-CDT profile."""
+    return profile_from_dict(json.loads(Path(path).read_text(encoding="utf-8")))
 
 
 def uncalibrated_cdt_prior(
@@ -277,8 +316,15 @@ def validate_phenotype_to_cdt(
         raise ValueError("held-out arrays have incompatible shapes")
     if tuple(names) != CDT_PARAMETER_NAMES:
         raise ValueError("target_names must use the canonical CDT parameter order")
+    if not np.isfinite(x).all() or not np.isfinite(y).all():
+        raise ValueError("held-out arrays must be finite")
+    if np.any((x < 0) | (x > 1)):
+        raise ValueError("held-out phenotype values must be in [0, 1]")
     predictions = np.asarray(
-        [list(profile.transform({name: float(row[i]) for i, name in enumerate(PHENOTYPES)}).values()) for row in x],
+        [
+            [profile.rules[name].apply({phenotype: float(row[i]) for i, phenotype in enumerate(PHENOTYPES)}) for name in CDT_PARAMETER_NAMES]
+            for row in x
+        ],
         dtype=float,
     )
     metrics: dict[str, Mapping[str, float]] = {}
