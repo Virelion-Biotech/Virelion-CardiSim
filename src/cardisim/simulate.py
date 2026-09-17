@@ -2,17 +2,17 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import csv
 import hashlib
 import json
 from pathlib import Path
 from typing import Any, Mapping
-import csv
 
 import numpy as np
 
 from .dynamics import DynamicsParameters, rk4_step
 from .events import EventSchedule
-from .models import CardiacState, SimulationConfig, PHENOTYPES, N_FEATURES
+from .models import CardiacState, N_FEATURES, PHENOTYPES, SimulationConfig
 from .presets import initial_state
 
 SIMULATION_RESULT_VERSION = "0.4.0"
@@ -175,7 +175,8 @@ class CardiacSimulator:
             base = np.array([initial_state()[name] for name in PHENOTYPES], dtype=float)
             noise = rng.normal(0.0, self.config.heterogeneity, size=(self.config.n_cells, N_FEATURES))
             values = np.clip(base[None, :] + noise, 0.0, 1.0)
-            return CardiacState(values, self._default_cell_ids()), self._default_cell_ids(), "baseline+heterogeneity"
+            ids = self._default_cell_ids()
+            return CardiacState(values, ids), ids, "baseline+heterogeneity"
         if isinstance(initial, CardiacState):
             if len(initial.values) != self.config.n_cells:
                 raise ValueError("provided CardiacState cell count must equal config.n_cells")
@@ -212,11 +213,7 @@ class CardiacSimulator:
             step = float(times[i] - times[i - 1])
             state.values[:] = rk4_step(state.values, t, step, schedule.forcing, self.dynamics)
             if self.config.process_noise:
-                state.values[:] += rng.normal(
-                    0.0,
-                    self.config.process_noise * np.sqrt(step),
-                    state.values.shape,
-                )
+                state.values[:] += rng.normal(0.0, self.config.process_noise * np.sqrt(step), state.values.shape)
             if self.config.clamp_states:
                 state.values[:] = np.clip(state.values, 0.0, 1.0)
             if not np.isfinite(state.values).all():
