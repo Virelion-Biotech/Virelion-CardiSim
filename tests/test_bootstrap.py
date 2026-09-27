@@ -1,6 +1,6 @@
 import numpy as np
 
-from cardisim import CardiacSimulator, EmpiricalTrajectory, SimulationConfig, bootstrap_calibrate
+from cardisim import EmpiricalTrajectory, SimulationConfig, bootstrap_calibrate
 from cardisim.models import N_FEATURES
 
 

@@ -94,6 +94,7 @@ __all__ = [
     "ensemble_final_means",
     "fit_phenotype_to_cdt",
     "health_score",
+    "load_long_csv",
     "load_profile",
     "mean_target",
     "maturity_score",
