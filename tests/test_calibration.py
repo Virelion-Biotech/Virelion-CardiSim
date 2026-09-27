@@ -43,7 +43,12 @@ def test_subject_holdout_keeps_subjects_disjoint_and_reports_test_error():
         subjects.append(f"subject-{subject_index}")
         cells.append(f"cell-{subject_index}")
     data = EmpiricalTrajectory(
-        "dataset-1", "study-1", times, np.stack(values), tuple(subjects), tuple(cells)
+        "dataset-1",
+        "study-1",
+        times,
+        np.stack(values, axis=1),
+        tuple(subjects),
+        tuple(cells),
     )
     result = calibrate_subject_holdout(data, test_fraction=0.2, seed=4, regularization=1e-6)
     assert result.report.n_train_subjects == 5

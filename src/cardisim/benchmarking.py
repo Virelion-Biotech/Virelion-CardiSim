@@ -69,7 +69,9 @@ def geometry_fingerprint(
     if not np.isfinite(values).all():
         raise ValueError("points contain non-finite values")
 
-    centered = values - values.mean(axis=0, keepdims=True)
+    raw_order = np.lexsort((values[:, 2], values[:, 1], values[:, 0]))
+    ordered_values = values[raw_order]
+    centered = ordered_values - ordered_values.mean(axis=0, keepdims=True)
     scale = float(np.sqrt(np.mean(np.square(centered))))
     if not np.isfinite(scale) or scale <= 0:
         raise ValueError("geometry has zero spatial extent")

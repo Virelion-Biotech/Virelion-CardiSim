@@ -19,7 +19,14 @@ def make_data():
         values.append(np.stack(rows))
         subjects.append(f"subject-{i}")
         cells.append(f"cell-{i}")
-    return EmpiricalTrajectory("d", "s", times, np.stack(values), tuple(subjects), tuple(cells))
+    return EmpiricalTrajectory(
+        "d",
+        "s",
+        times,
+        np.stack(values, axis=1),
+        tuple(subjects),
+        tuple(cells),
+    )
 
 
 def test_bootstrap_is_reproducible_and_simulatable():
