@@ -13,7 +13,7 @@ authors = [{name = "Virelion Biotech"}]
 dependencies = ["numpy>=1.24"]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.0", "ruff>=0.6,<0.7"]
+dev = ["pytest>=8.0", "ruff>=0.6,<0.7", "jsonschema>=4.23"]
 gnn = ["torch>=2.2", "torch-geometric>=2.3"]
 gino = ["torch>=2.2"]
 
