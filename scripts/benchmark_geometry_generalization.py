@@ -131,6 +131,7 @@ def main() -> int:
     parser.add_argument("--lr", type=float, default=1e-3)
     parser.add_argument("--weight-decay", type=float, default=1e-4)
     parser.add_argument("--save-checkpoints", action="store_true")
+    parser.add_argument("--audit-only", action="store_true")
     parser.add_argument("--overwrite", action="store_true")
     args = parser.parse_args()
 
@@ -159,10 +160,17 @@ def main() -> int:
 
     all_cases: list[Any] = []
     shard_counts = {}
-    for shard in args.shards:
-        shard_cases = load_cases(shard, args.cases_per_shard, torch)
-        all_cases.extend(shard_cases)
+    shard_sample_indices = {}
+    for shard_index, shard in enumerate(args.shards):
+        shard_cases = load_cases(shard, 10**9, torch)
+        take = min(args.cases_per_shard, len(shard_cases))
+        sampler = np.random.default_rng(args.split_seed + shard_index)
+        selected = np.sort(
+            sampler.choice(len(shard_cases), size=take, replace=False)
+        ).tolist()
+        all_cases.extend(shard_cases[index] for index in selected)
         shard_counts[str(shard)] = len(shard_cases)
+        shard_sample_indices[str(shard)] = selected
 
     cases = all_cases[: args.max_cases]
     if len(cases) < 6:
@@ -183,6 +191,38 @@ def main() -> int:
 
     if grouped_overlap["groups_shared_across_partitions"] != 0:
         raise AssertionError("grouped split leaked geometry groups")
+
+    audit = {
+        "repository_head": repo_head(),
+        "source_shards": [str(path) for path in args.shards],
+        "source_shard_counts": shard_counts,
+        "source_shard_sample_indices": shard_sample_indices,
+        "total_cases": len(cases),
+        "unique_geometry_groups": len(groups),
+        "group_size_distribution": {
+            "min": min(len(v) for v in groups.values()),
+            "max": max(len(v) for v in groups.values()),
+            "mean": float(np.mean([len(v) for v in groups.values()])),
+            "median": float(np.median([len(v) for v in groups.values()])),
+        },
+        "random_case_split": random_overlap,
+        "grouped_split": grouped_overlap,
+        "fingerprint_definition": {
+            "translation_invariant": True,
+            "isotropic_scale_invariant": True,
+            "row_order_invariant": True,
+            "rotation_invariant": False,
+            "rounded_decimals": args.geometry_decimals,
+            "max_points": args.geometry_max_points,
+        },
+    }
+    audit_path = args.output / "geometry_audit.json"
+    audit_path.write_text(json.dumps(audit, indent=2) + "\n", encoding="utf-8")
+
+    if args.audit_only:
+        print(json.dumps(audit, indent=2))
+        print(audit_path)
+        return 0
 
     train_raw = [cases[i] for i in train_idx]
     val_raw = [cases[i] for i in val_idx]
@@ -264,6 +304,7 @@ def main() -> int:
         "repository_head": repo_head(),
         "source_shards": [str(path) for path in args.shards],
         "source_shard_counts": shard_counts,
+        "source_shard_sample_indices": shard_sample_indices,
         "device": str(device),
         "configuration": {
             "cases_per_shard": args.cases_per_shard,
@@ -286,25 +327,8 @@ def main() -> int:
             "weight_decay": args.weight_decay,
         },
         "geometry_audit": {
-            "total_cases": len(cases),
-            "unique_geometry_groups": len(groups),
-            "group_size_distribution": {
-                "min": min(len(v) for v in groups.values()),
-                "max": max(len(v) for v in groups.values()),
-                "mean": float(np.mean([len(v) for v in groups.values()])),
-                "median": float(np.median([len(v) for v in groups.values()])),
-            },
-            "random_case_split": random_overlap,
-            "grouped_split": grouped_overlap,
+            **audit,
             "geometry_ids_sha256": geometry_ids_hash,
-            "fingerprint_definition": {
-                "translation_invariant": True,
-                "isotropic_scale_invariant": True,
-                "row_order_invariant": True,
-                "rotation_invariant": False,
-                "rounded_decimals": args.geometry_decimals,
-                "max_points": args.geometry_max_points,
-            },
         },
         "split": {
             "train_cases": len(train_idx),
@@ -353,6 +377,7 @@ def main() -> int:
     print("================================================")
     print("SAVED")
     print("================================================")
+    print(audit_path)
     print(json_path)
     print(report_path)
     if args.save_checkpoints:

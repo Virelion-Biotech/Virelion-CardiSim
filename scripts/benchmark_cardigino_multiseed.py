@@ -14,7 +14,6 @@ published DeepCardioSim training protocol.
 from __future__ import annotations
 
 import argparse
-import copy
 import json
 import random
 import shutil
