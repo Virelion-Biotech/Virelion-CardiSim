@@ -1,0 +1,237 @@
+{
+  "artifact_type": "cardisim_controlled_benchmark",
+  "repository": "Virelion-Biotech/Virelion-CardiSim",
+  "branch": "main",
+  "benchmark_base_commit": "6a4aa3f3cbf615d7b130f54a00ebd95ca31a402a",
+  "source_shard": "artifacts/deepcardiosim/data_chunk_001.pt",
+  "seed": 12130875,
+  "split": {
+    "train_cases": 90,
+    "validation_cases": 19,
+    "test_cases": 19,
+    "train_indices": [
+      80,
+      64,
+      63,
+      36,
+      5,
+      74,
+      52,
+      67,
+      16,
+      50,
+      112,
+      105,
+      27,
+      57,
+      124,
+      92,
+      28,
+      26,
+      114,
+      43,
+      35,
+      62,
+      11,
+      111,
+      56,
+      73,
+      10,
+      117,
+      53,
+      109,
+      97,
+      7,
+      44,
+      31,
+      1,
+      86,
+      14,
+      58,
+      96,
+      76,
+      24,
+      2,
+      77,
+      85,
+      61,
+      93,
+      49,
+      106,
+      23,
+      47,
+      19,
+      104,
+      113,
+      4,
+      91,
+      48,
+      87,
+      83,
+      107,
+      90,
+      126,
+      120,
+      3,
+      9,
+      75,
+      51,
+      69,
+      108,
+      88,
+      59,
+      70,
+      119,
+      84,
+      101,
+      6,
+      122,
+      38,
+      123,
+      15,
+      115,
+      71,
+      22,
+      29,
+      8,
+      81,
+      39,
+      41,
+      13,
+      40,
+      18
+    ],
+    "validation_indices": [
+      110,
+      0,
+      17,
+      42,
+      127,
+      78,
+      45,
+      66,
+      33,
+      95,
+      34,
+      55,
+      82,
+      54,
+      20,
+      30,
+      125,
+      118,
+      103
+    ],
+    "test_indices": [
+      121,
+      65,
+      68,
+      94,
+      21,
+      98,
+      99,
+      60,
+      72,
+      37,
+      79,
+      89,
+      32,
+      12,
+      25,
+      116,
+      46,
+      100,
+      102
+    ]
+  },
+  "models": {
+    "cardignn": {
+      "config": {
+        "in_channels": 8,
+        "hidden_channels": 32,
+        "layers": 4,
+        "radius": 0.5,
+        "max_num_neighbors": 128,
+        "dropout": 0.0,
+        "out_channels": 1,
+        "architecture": "spatial"
+      },
+      "best_epoch": 20,
+      "test": {
+        "mae": 12.183206558227539,
+        "rmse": 16.775936258626988,
+        "r2": 0.46437446891986434
+      }
+    },
+    "cardigino": {
+      "config": {
+        "in_channels": 5,
+        "out_channels": 1,
+        "hidden_channels": 32,
+        "spectral_layers": 4,
+        "grid_size": 16,
+        "modes": [
+          8,
+          8,
+          8
+        ],
+        "mlp_ratio": 2.0
+      },
+      "best_epoch": 20,
+      "test": {
+        "mae": 6.6692633628845215,
+        "rmse": 10.040175035630293,
+        "r2": 0.8081462480012037
+      }
+    }
+  },
+  "baseline": {
+    "validation": {
+      "mae": 15.995251655578613,
+      "rmse": 19.546671255682753,
+      "r2": -0.05468924321512891
+    },
+    "test": {
+      "mae": 17.638256072998047,
+      "rmse": 23.00284989986295,
+      "r2": -0.007049958481085028
+    }
+  },
+  "files": [
+    {
+      "path": "artifacts/controlled_benchmark/CONTROLLED_BENCHMARK_REPORT.md",
+      "size_bytes": 2920,
+      "sha256": "03e3c60549c603f3d33ebc31a05c1d57864834bbb9a3bec2ed7f8378cf1b902e"
+    },
+    {
+      "path": "artifacts/controlled_benchmark/ENVIRONMENT.json",
+      "size_bytes": 719,
+      "sha256": "c48d242f650497a483ec13122a66e993c0a7183701df3e8aa7329a953211cacb"
+    },
+    {
+      "path": "artifacts/controlled_benchmark/SHA256SUMS.txt",
+      "size_bytes": 441,
+      "sha256": "ef448107ffaac4df5896bc1f75356fba42211c3287bf193c26e53462cb049a13"
+    },
+    {
+      "path": "artifacts/controlled_benchmark/cardigino_controlled.pt",
+      "size_bytes": 67228425,
+      "sha256": "aea5f1e612bc7bf994dccce47aac36c3b8879b54e9578ef50bc6bb6cbb6a8cae"
+    },
+    {
+      "path": "artifacts/controlled_benchmark/cardignn_controlled.pt",
+      "size_bytes": 129005,
+      "sha256": "c327c277fc6f01326dbc52a22e983125b92b7947434f0c3e101bf1964c5c8f59"
+    },
+    {
+      "path": "artifacts/controlled_benchmark/comparison.json",
+      "size_bytes": 12059,
+      "sha256": "ffe86d1d69a6e689fe617e6d62c1aaa51be690b7865036433e753e212c975729"
+    }
+  ],
+  "data_policy": {
+    "source_dataset_bytes_committed": false,
+    "deepcardiosim_shard_committed": false,
+    "trained_checkpoints_committed": true
+  }
+}

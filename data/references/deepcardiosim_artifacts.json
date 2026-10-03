@@ -1,0 +1,35 @@
+{
+  "record_id": "17651628",
+  "record_url": "https://zenodo.org/records/17651628",
+  "record_revision": 4,
+  "title": "Cardiac Electrophysiology Simulation Dataset",
+  "inventory_source": "Zenodo record API",
+  "inventory_date": "2026-09-14",
+  "files": [
+    {"key": "data_npy.z01", "size": 2147483648, "checksum": {"algorithm": "md5", "digest": "6e435ede42b567fca2881240bf40eeb1"}},
+    {"key": "data_npy.z03", "size": 2147483648, "checksum": {"algorithm": "md5", "digest": "d869922e0957f4c66ce735113ad730b0"}},
+    {"key": "data_npy.zip", "size": 1789381119, "checksum": {"algorithm": "md5", "digest": "4ca7890e1ccf27d06f908d8d5b6c27e5"}},
+    {"key": "data_chunk_006.pt", "size": 930676125, "checksum": {"algorithm": "md5", "digest": "c185b42e9ac142a850bd9033b44cb0d8"}},
+    {"key": "data_npy.z02", "size": 2147483648, "checksum": {"algorithm": "md5", "digest": "417070e62910151a4c1f353d30048403"}},
+    {"key": "LVmeans.zip", "size": 15148442, "checksum": {"algorithm": "md5", "digest": "75cc20f5e163da6f0d6ba5052bb1e3c5"}},
+    {"key": "data_chunk_004.pt", "size": 1042777030, "checksum": {"algorithm": "md5", "digest": "ccdfada6e61371bde0f8cbfe4da93fe2"}},
+    {"key": "data_chunk_001.pt", "size": 1042776966, "checksum": {"algorithm": "md5", "digest": "2f7861ff36929368ec5aa135a359da02"}},
+    {"key": "data_chunk_002.pt", "size": 1042776902, "checksum": {"algorithm": "md5", "digest": "0dd31c748999f5858f48828aac7a8094"}},
+    {"key": "data_chunk_003.pt", "size": 1042776966, "checksum": {"algorithm": "md5", "digest": "b1a138eca697095266f5ef75c78703f4"}},
+    {"key": "data_chunk_005.pt", "size": 1042777030, "checksum": {"algorithm": "md5", "digest": "cccc19c892048cb6b55df85e7cb1798"}},
+    {"key": "realLVs.zip", "size": 106152740, "checksum": {"algorithm": "md5", "digest": "20c968552cb91fd9365d240a8eab15c8"}}
+  ],
+  "training_shards": [
+    "data_chunk_001.pt",
+    "data_chunk_002.pt",
+    "data_chunk_003.pt",
+    "data_chunk_004.pt",
+    "data_chunk_005.pt",
+    "data_chunk_006.pt"
+  ],
+  "policy": {
+    "dataset_bytes_in_git": false,
+    "runtime_inventory_must_be_revalidated": true,
+    "checksums_source_of_truth": "Zenodo record API"
+  }
+}

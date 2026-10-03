@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "virelion-cardisim"
+version = "0.4.0"
+description = "Synthetic cardiac-cell and cardiac-phenotype trajectory simulator with empirical calibration support."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "AGPL-3.0-or-later"}
+authors = [{name = "Virelion Biotech"}]
+dependencies = ["numpy>=1.24"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6,<0.7", "jsonschema>=4.23"]
+gnn = ["torch>=2.2", "torch-geometric>=2.3"]
+gino = ["torch>=2.2"]
+
+[project.scripts]
+cardisim = "cardisim.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "."]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"

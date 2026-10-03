@@ -1,0 +1,23 @@
+{
+  "fixture_id": "deepcardiosim_ep_smoke_v1",
+  "source": {
+    "repository": "https://github.com/ehsanngh/DeepCardioSim",
+    "repository_commit": "a0b271a9aee84fd7b6299602dd4dbf8a3a01698f",
+    "zenodo_record": "17651628",
+    "purpose": "CI-only contract test; not a published DeepCardioSim sample"
+  },
+  "coordinates": [
+    [0.0, 0.0, 0.0],
+    [1.0, 0.0, 0.5],
+    [0.0, 2.0, 1.0],
+    [1.0, 2.0, 1.5]
+  ],
+  "features": [
+    [1.0, 0.10, 0.0, 1.0, 0.0],
+    [0.0, 0.20, 0.5, 0.5, 0.0],
+    [0.0, 0.30, 0.0, 0.5, 0.8660254],
+    [0.0, 0.40, 1.0, 0.0, 0.0]
+  ],
+  "target_activation_time": [10.0, 20.0, 30.0, 40.0],
+  "query_resolution": [2, 3, 4]
+}

@@ -1,0 +1,72 @@
+{
+  "benchmark": "cardisim_multiseed_cardignn_cardigino",
+  "source": "user-run Colab output",
+  "repository_head": "e27dd091bc44b8e3a5dfd4fb4e94e549d816001f",
+  "source_shard": "artifacts/deepcardiosim/data_chunk_001.pt",
+  "device": "cuda: Tesla T4",
+  "cases": 128,
+  "split": {
+    "seed": 12130875,
+    "train": 90,
+    "validation": 19,
+    "test": 19
+  },
+  "configuration": {
+    "epochs": 60,
+    "patience": 12,
+    "hidden": 32,
+    "gnn_layers": 4,
+    "gnn_radius": 0.5,
+    "gnn_max_neighbors": 128,
+    "gino_grid_size": 16,
+    "gino_modes": [8, 8, 8],
+    "gino_spectral_layers": 4,
+    "gino_mlp_ratio": 2.0,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001,
+    "model_seeds": [12130875, 20260917, 31415927, 27182818, 8675309]
+  },
+  "baseline_test": {
+    "mae": 17.638256072998047,
+    "rmse": 23.00284989986295,
+    "r2": -0.007049958481085028
+  },
+  "cardignn_test_by_seed": [
+    {"seed": 12130875, "mae": 12.184736251831055, "rmse": 16.775350489131462, "r2": 0.4644119176801186, "best_epoch": 20, "runtime_seconds": 100.29000508800027, "peak_gpu_memory_mb": 745.5302734375},
+    {"seed": 20260917, "mae": 12.528233528137207, "rmse": 17.47615824996256, "r2": 0.41872768295762797, "best_epoch": 11, "runtime_seconds": 74.31419112100002, "peak_gpu_memory_mb": 745.5302734375},
+    {"seed": 31415927, "mae": 11.237483024597168, "rmse": 15.862933521644393, "r2": 0.5210891150382544, "best_epoch": 33, "runtime_seconds": 144.7371440779998, "peak_gpu_memory_mb": 743.35546875},
+    {"seed": 27182818, "mae": 11.100443840026855, "rmse": 16.203758764425714, "r2": 0.5002886223493535, "best_epoch": 60, "runtime_seconds": 192.77218246300026, "peak_gpu_memory_mb": 743.35546875},
+    {"seed": 8675309, "mae": 11.12009334564209, "rmse": 15.970456504340483, "r2": 0.5145747405526536, "best_epoch": 60, "runtime_seconds": 192.7015591320005, "peak_gpu_memory_mb": 745.5302734375}
+  ],
+  "cardignn_test_summary": {
+    "mae_mean": 11.634197998046876,
+    "mae_sd": 0.672490104561164,
+    "rmse_mean": 16.45773150590092,
+    "rmse_sd": 0.6696638287533114,
+    "r2_mean": 0.48381841571560164,
+    "r2_sd": 0.0424845263272744
+  },
+  "cardigino_test_by_seed": [
+    {"seed": 12130875, "mae": 6.532926082611084, "rmse": 9.803925284740266, "r2": 0.8170688321558242, "best_epoch": 33, "runtime_seconds": 112.00196293499994, "peak_gpu_memory_mb": 338.015625},
+    {"seed": 20260917, "mae": 6.8770904541015625, "rmse": 10.2739343095179, "r2": 0.7991086277606576, "best_epoch": 23, "runtime_seconds": 86.9874104570008, "peak_gpu_memory_mb": 338.015625},
+    {"seed": 31415927, "mae": 6.948728084564209, "rmse": 10.43882587714535, "r2": 0.792608473795376, "best_epoch": 24, "runtime_seconds": 89.45786492499974, "peak_gpu_memory_mb": 338.015625},
+    {"seed": 27182818, "mae": 6.165406227111816, "rmse": 9.491900555076466, "r2": 0.8285276627903446, "best_epoch": 30, "runtime_seconds": 105.05524634700032, "peak_gpu_memory_mb": 338.015625},
+    {"seed": 8675309, "mae": 6.489227771759033, "rmse": 9.889552728704576, "r2": 0.8138594358698739, "best_epoch": 27, "runtime_seconds": 96.8346179579994, "peak_gpu_memory_mb": 338.015625}
+  ],
+  "cardigino_test_summary": {
+    "mae_mean": 6.602675724029541,
+    "mae_sd": 0.3178032974967263,
+    "rmse_mean": 9.97962775103691,
+    "rmse_sd": 0.37892675854865343,
+    "r2_mean": 0.8102346064744154,
+    "r2_sd": 0.014395744976784424
+  },
+  "paired_gino_minus_gnn_test": {
+    "mae_mean": -5.031522274017334,
+    "mae_sd": 0.6103739432460681,
+    "rmse_mean": -6.478103754864011,
+    "rmse_sd": 0.7230202045731385,
+    "r2_mean": 0.3264161907588137,
+    "r2_sd": 0.04287736363724453
+  }
+}
