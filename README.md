@@ -1,101 +1,118 @@
 # Virelion-CardiSim
 
-**Virelion-CardiSim** is a transparent, reproducible simulator for generating synthetic cardiac-cell and cardiac-phenotype trajectories under controlled perturbations.
+CardiSim is the Virelion **phenotype-dynamics engine**. It generates reproducible synthetic cardiac-cell and cardiac-phenotype trajectories under controlled perturbations, fits latent dynamics to empirical trajectories, summarizes population variability, and provides an explicit calibration-ready bridge into a spatial cardiac digital-twin engine.
 
-It is designed as an infrastructure component of Virelion's cardiac challenge stack:
+CardiSim is not a validated physiological model or clinical digital twin. Its normalized phenotype variables are latent abstractions unless an external calibration study establishes a measurement relationship.
 
-`CardiAgent → CardiVex → CardiSim → CardiEval → CardiLearn`
+## What it contains
 
-The simulator is deliberately **synthetic and mechanistic**. Its trajectories are useful for software development, stress-testing, hypothesis generation, benchmark construction, and method evaluation; they are not a substitute for experimental measurements.
+- Bounded twelve-dimensional phenotype dynamics.
+- Fourth-order Runge–Kutta integration.
+- Seeded population heterogeneity and deterministic cell IDs.
+- Time-localized challenge and intervention events.
+- Baseline, maturation, myocardial-injury-like, hypoxia, radiation-like, and electrophysiology/toxicity presets.
+- Empirical trajectory, longitudinal, cohort, and subject-disjoint calibration utilities.
+- Numerical stability and timestep-convergence diagnostics.
+- Population-spread and run-to-run variability summaries.
+- Explicit, versioned phenotype→CDT parameter mapping profiles.
+- Geometry-aware CardiGNN and geometry-informed CardiGINO research models.
+- Geometry-disjoint benchmarking for neural surrogates.
+- CardiAtlas metadata bridges and auditable target derivation.
+- Python API and CLI.
 
-## What is included
+## Canonical phenotype state
 
-- Coupled continuous cardiac phenotype state model with bounded states.
-- Fourth-order Runge–Kutta integration with deterministic seeds.
-- Population-level heterogeneity and reproducible cell IDs.
-- Time-localized challenge events with onset, duration, magnitude, and recovery.
-- Built-in presets for baseline maturation, myocardial infarction-like injury, hypoxia, radiation injury, and electrophysiology/toxicity stress.
-- Intervention support for rescue/attenuation perturbations.
-- Empirical calibration through regularized latent-dynamics fitting.
-- Explicit CardiAtlas calibration bridge and provenance-aware target ingestion.
-- Reproducible GEO source helpers and transparent cardiac proxy marker modules.
-- Trajectory summaries and health/maturity scores.
-- JSON serialization and CSV export.
-- Python API and `cardisim` CLI.
-- Unit tests and GitHub Actions CI.
+The state dimensions are `maturity`, `contractility`, `calcium_handling`, `electrophysiology`, `metabolism`, `hypertrophy`, `fibrosis`, `inflammation`, `angiogenesis`, `viability`, `oxidative_stress`, and `mitochondrial_health`. They are normalized latent variables, not direct patient, animal, or cellular measurements.
 
 ## Installation
 
 ```bash
 pip install -e .
-```
-
-For development:
-
-```bash
 pip install -e '.[dev]'
-pytest
 ```
 
-## Minimal Python example
+## Usage
+
+Basic simulation:
 
 ```python
 from cardisim import CardiacSimulator, SimulationConfig, population_preset
 
 config = SimulationConfig(duration=28, dt=0.25, n_cells=256, seed=42)
-sim = CardiacSimulator(config)
-result = sim.run(population_preset("mi"))
-
-print(result.summary())
+result = CardiacSimulator(config).run(population_preset("mi"))
 result.to_csv("mi_population.csv")
+print(result.fingerprint())
 ```
 
-## CLI
+Start from a supplied phenotype mean and export CDT parameters:
 
 ```bash
-cardisim simulate --preset mi --cells 256 --days 28 --dt 0.25 --seed 42 --output mi.csv
-cardisim derive-targets --expression expression.csv --metadata samples.json --dataset-id GSE185289 --study-id pig_regeneration --output targets.csv
+cardisim simulate \
+  --preset mi \
+  --cells 256 \
+  --days 28 \
+  --dt 0.25 \
+  --seed 42 \
+  --initial-json patient_phenotype.json \
+  --output mi_population.csv \
+  --cdt-output cdt_parameters.json
 ```
 
-## Empirical calibration panel
+Use a calibrated phenotype→CDT profile:
 
-CardiSim now has a locked public-data calibration panel:
+```bash
+cardisim simulate \
+  --preset baseline \
+  --initial-json phenotype.json \
+  --cdt-profile profiles/phenotype_to_cdt_v1.json \
+  --cdt-output cdt_parameters.json \
+  --output trajectory.json \
+  --format json
+```
 
-| Accession | Organism | Modality | Role |
-|---|---|---|---|
-| **GSE185289** | pig | snRNA-seq | maturation, regenerative vs non-regenerative injury, remodeling |
-| **GSE240848** | rat | snRNA-seq | acute MI / ischemia-reperfusion |
-| **GSE135310** | mouse | scRNA-seq | post-MI inflammation |
+Derive calibration targets from an expression table:
 
-These accessions are stored as metadata in `data/reference/calibration_panel.json`; raw/large expression matrices are intentionally not redistributed in the repository. The calibration workflow fetches the public processed source at runtime, records a checksum, derives 12 transparent phenotype proxy targets, and only then fits the latent dynamics.
+```bash
+cardisim derive-targets \
+  --expression expression.csv \
+  --metadata samples.json \
+  --dataset-id GSE185289 \
+  --study-id pig_regeneration \
+  --output targets.csv
+```
 
-**Important:** the panel is currently **source-locked, not numerically fit**. No claim of biological calibration is made until processed expression data have been converted to subject-level targets and the fit passes held-out validation.
+## Phenotype → CDT bridge
 
-See [`docs/CALIBRATION_PANEL.md`](docs/CALIBRATION_PANEL.md) for the data policy, calibration gate, and target definition.
+`cardisim.phenotype_to_cdt` provides a strict handoff contract from the latent phenotype layer to CDT electrophysiology parameters. The packaged profile is intentionally uncalibrated and has zero phenotype-dependent weights. This prevents the software from silently asserting disease-to-conduction relationships that have not been established.
 
-## Design principles
+Paired empirical data can be used to fit affine mappings for fibre, sheet, normal, endocardial and Purkinje conduction speeds and APD bounds. The fitted profile is versioned and serializable, and held-out paired data can be evaluated separately.
 
-1. **Reproducibility:** every stochastic component is seeded and recorded.
-2. **Auditability:** model parameters and events are explicit Python objects and serializable configurations.
-3. **Bounded biology:** states have interpretable ranges and non-finite values are rejected.
-4. **Composability:** challenge events can be combined and interventions can be applied without changing the numerical engine.
-5. **Benchmarkability:** population simulation can generate matched control/perturbation cohorts for downstream evaluation.
-6. **Evidence discipline:** public datasets are sources, while derived latent targets and fitted parameters are versioned artifacts with provenance.
+```python
+from cardisim import fit_phenotype_to_cdt, validate_phenotype_to_cdt
 
-## Phenotype state vector
+profile, fit_report = fit_phenotype_to_cdt(phenotype_matrix, cdt_parameter_targets)
+profile.save_json("phenotype_to_cdt_v1.json")
+held_out_report = validate_phenotype_to_cdt(profile, held_out_phenotypes, held_out_targets)
+```
 
-The simulator models twelve normalized dimensions in `[0, 1]`:
+## Validation layers
 
-`maturity, contractility, calcium_handling, electrophysiology, metabolism, hypertrophy, fibrosis, inflammation, angiogenesis, viability, oxidative_stress, mitochondrial_health`
+CardiSim separates three claims:
 
-These are abstract latent phenotypes, not direct measurements of specific biomarkers.
+1. **Software validation:** deterministic behavior, schema/API checks, bounded-state checks, unit tests, and reproducibility fingerprints.
+2. **Numerical validation:** linear-system stability diagnostics and timestep-refinement comparisons with stochastic noise/clipping disabled.
+3. **Biological calibration/validation:** parameters fitted from processed empirical data and evaluated on held-out subjects or independent datasets.
 
-## Scientific scope and limitations
+A low numerical error does not establish biological validity. A high calibration R² does not establish external predictive validity.
 
-CardiSim is **not a validated physiological digital twin**. Default parameters remain qualitative until external calibration and validation are complete. Proxy marker modules are transparent computational constructs and must not be interpreted as established clinical biomarkers.
+## Integration with HeartTwin
 
-See [`docs/MODEL.md`](docs/MODEL.md) and [`docs/CALIBRATION_PANEL.md`](docs/CALIBRATION_PANEL.md).
+CardiSim remains the phenotype layer. HeartTwin can consume its simulation summaries and, when a calibrated mapping profile is supplied, translate a final phenotype state into CDT parameter targets. The mapping artifact should retain its calibration provenance and validation results.
+
+## Limitations
+
+Default phenotype equations and presets are qualitative. The simulator does not reproduce measured biomarkers by construction, and synthetic trajectories cannot establish that a corresponding biological process occurs in vivo or in vitro. The phenotype→CDT bridge is a calibration interface; the default fixed prior is not a validated biological mapping.
 
 ## License
 
-MIT. See `LICENSE`.
+GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See `LICENSE`.

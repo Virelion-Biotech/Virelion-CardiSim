@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://virelionbiotech.net/schemas/cardisim-simulation-result-0.4.0.json",
+  "title": "CardiSim simulation result",
+  "type": "object",
+  "required": ["version", "config", "phenotypes", "events", "event_specs", "cell_ids", "time", "values", "summary"],
+  "properties": {
+    "version": {"const": "0.4.0"},
+    "dynamics_source": {"type": "string"},
+    "dynamics_fingerprint": {"type": "string"},
+    "initialization": {"type": "string"},
+    "initial_state_fingerprint": {"type": "string"},
+    "config": {"$ref": "#/$defs/config"},
+    "phenotypes": {
+      "type": "array",
+      "const": ["maturity", "contractility", "calcium_handling", "electrophysiology", "metabolism", "hypertrophy", "fibrosis", "inflammation", "angiogenesis", "viability", "oxidative_stress", "mitochondrial_health"]
+    },
+    "events": {"type": "array", "items": {"type": "string"}},
+    "event_specs": {"type": "array", "items": {"$ref": "#/$defs/event"}},
+    "cell_ids": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "time": {"type": "array", "items": {"type": "number"}},
+    "values": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "prefixItems": [
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1},
+            {"type": "number", "minimum": 0, "maximum": 1}
+          ],
+          "minItems": 12,
+          "maxItems": 12
+        }
+      }
+    },
+    "summary": {"type": "object"}
+  },
+  "$defs": {
+    "config": {
+      "type": "object",
+      "required": ["duration", "dt", "n_cells", "seed", "heterogeneity", "process_noise", "clamp_states"],
+      "properties": {
+        "duration": {"type": "number", "exclusiveMinimum": 0},
+        "dt": {"type": "number", "exclusiveMinimum": 0},
+        "n_cells": {"type": "integer", "minimum": 1},
+        "seed": {"type": "integer"},
+        "heterogeneity": {"type": "number", "minimum": 0},
+        "process_noise": {"type": "number", "minimum": 0},
+        "clamp_states": {"type": "boolean"}
+      }
+    },
+    "event": {
+      "type": "object",
+      "required": ["name", "onset", "duration", "magnitude", "effects", "recovery", "kernel", "kernel_sigma"],
+      "properties": {
+        "name": {"type": "string"},
+        "onset": {"type": "number", "minimum": 0},
+        "duration": {"type": "number", "exclusiveMinimum": 0},
+        "magnitude": {"type": "number"},
+        "effects": {"type": "object", "additionalProperties": {"type": "number"}},
+        "recovery": {"type": "number", "minimum": 0},
+        "kernel": {"enum": ["sin2", "box", "gaussian"]},
+        "kernel_sigma": {"type": "number", "exclusiveMinimum": 0}
+      }
+    }
+  }
+}

@@ -94,7 +94,7 @@ PRESETS = {
                     "inflammation": 0.18,
                     "angiogenesis": 0.12,
                 },
-            )
+            ),
         )
     ),
     "radiation": EventSchedule(
@@ -142,7 +142,7 @@ PRESETS = {
                     "viability": -0.08,
                     "oxidative_stress": 0.10,
                 },
-            )
+            ),
         )
     ),
 }
