@@ -1,0 +1,26 @@
+{
+  "state/best-12130875.pt": {
+    "bytes": 1115377,
+    "sha256": "4ce6b442e1a42a3e93f0f759c095a0e804cd310f429a870753c42487d817fb13"
+  },
+  "state/best-1729.pt": {
+    "bytes": 1115209,
+    "sha256": "cf46a3689b98c4b6fce59e322f1c8c163682d273125ad5d9d55da6e067f86161"
+  },
+  "state/best-42.pt": {
+    "bytes": 1115125,
+    "sha256": "59087541d77295bf0c042f3477e5c9448fda126c89d36829b5b2261fbc94a5d7"
+  },
+  "state/seed-12130875.pt": {
+    "bytes": 4320611,
+    "sha256": "6e3784de6f3e3835300ba5e93b75c43c2154681f0fd043c1b9cf761cc32bf8aa"
+  },
+  "state/seed-1729.pt": {
+    "bytes": 4320003,
+    "sha256": "b6a5886629147146cc2ef373a3e61b40bb2a4cb76a24b0332d7ccbd82461005e"
+  },
+  "state/seed-42.pt": {
+    "bytes": 4319667,
+    "sha256": "87048a05c67af78480a8c3c7a082b69308c252b6d9e5d00565017f32a35ed340"
+  }
+}

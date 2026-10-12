@@ -1,0 +1,15 @@
+{
+  "original_zip_sha256": "e879aae8835251bbfee634029a5fef38c1e3c1dddb625fc5822ed7c4f03ef36b",
+  "verified_payload_hashes": 22,
+  "payload_hash_mismatches": [],
+  "known_export_defect": "ARTIFACT_HASHES.json stored twice and includes stale self-hash; all other payload hashes pass",
+  "weights_in_zip": false,
+  "source_commit": "b42e3ba1c9141f762be1d1bf3cb2df68e97baab2",
+  "scope": "bounded simulation benchmark; not clinical or paper reproduction",
+  "archived_launcher_paths": {
+    "launcher/worker.py": "launcher/worker.py.txt",
+    "launcher/runtime.py": "launcher/runtime.py.txt",
+    "launcher/training.py": "launcher/training.py.txt",
+    "launcher/recovery_transport.py": "launcher/recovery_transport.py.txt"
+  }
+}

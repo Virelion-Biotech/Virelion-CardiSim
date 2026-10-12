@@ -1,0 +1,124 @@
+"""Transport-only preflight; scientific protocol and original worker are unchanged."""
+import http.client
+import hashlib
+import json
+import os
+import re
+import time
+import urllib.request
+import urllib.error
+from pathlib import Path
+
+
+def file_hash(path, algorithm='md5'):
+    h = hashlib.new(algorithm)
+    with Path(path).open('rb') as f:
+        for block in iter(lambda: f.read(1 << 20), b''):
+            h.update(block)
+    return h.hexdigest()
+
+
+class RecoveryPaused(Exception):
+    pass
+
+
+def recover(item, directory, deadline=None, attempts=12):
+    directory = Path(directory)
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / item['key']
+    part = path.with_name(path.name + '.part')
+    meta = path.with_name(path.name + '.part.meta.json')
+    expected = item['checksum'].split(':', 1)[1]
+    size = item['size']
+    url = item['url']
+
+    def accept(candidate):
+        return candidate.exists() and candidate.stat().st_size == size and file_hash(candidate) == expected
+
+    def finish():
+        if not accept(path):
+            raise ValueError('Producer checksum/size mismatch: ' + path.name)
+        receipt = {'url': url, 'size': size, 'sha256': file_hash(path, 'sha256'),
+                   'producer_checksum': expected, 'producer_algorithm': 'md5'}
+        temp = path.with_name(path.name + '.receipt.json.tmp')
+        temp.write_text(json.dumps(receipt, indent=2))
+        os.replace(temp, path.with_name(path.name + '.receipt.json'))
+        meta.unlink(missing_ok=True)
+        print('VERIFIED', path.name, size, flush=True)
+        return path
+
+    if path.exists():
+        if not accept(path):
+            raise ValueError('Existing completed shard is invalid; preserved for inspection: ' + str(path))
+        return finish()
+    last = None
+    for attempt in range(attempts):
+        if deadline is not None and time.monotonic() >= deadline:
+            raise RecoveryPaused('Download budget reached; partial bytes remain on Drive.')
+        if accept(part):
+            os.replace(part, path)
+            return finish()
+        offset = part.stat().st_size if part.exists() else 0
+        if offset >= size:
+            # Never concatenate onto an oversized or checksum-invalid full file.
+            quarantine = part.with_name(part.name + '.invalid-' + str(time.time_ns()))
+            os.replace(part, quarantine)
+            meta.unlink(missing_ok=True)
+            print('Preserved invalid partial at', quarantine.name, flush=True)
+            offset = 0
+        headers = {'User-Agent': 'Virelion-download-recovery/2.0', 'Cache-Control': 'no-cache'}
+        if offset:
+            headers['Range'] = f'bytes={offset}-'
+            if meta.exists():
+                previous = json.loads(meta.read_text())
+                if previous['url'] != url:
+                    raise ValueError('Partial source URL mismatch; file preserved')
+                if previous.get('validator'):
+                    headers['If-Range'] = previous['validator']
+        print('DOWNLOAD', path.name, 'attempt', attempt + 1, 'offset', offset, 'expected', size, flush=True)
+        try:
+            with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=90) as response:
+                status = response.status
+                if status == 206:
+                    match = re.fullmatch(r'bytes (\d+)-(\d+)/(\d+)', response.headers.get('Content-Range', ''))
+                    if not match or int(match[1]) != offset or int(match[3]) != size or not offset <= int(match[2]) < size:
+                        raise ValueError('Invalid Content-Range; refusing to append')
+                    mode = 'ab' if offset else 'wb'
+                elif status == 200:
+                    # Range ignored: restart, never append a full response.
+                    mode = 'wb'
+                else:
+                    raise ValueError('Unexpected HTTP response ' + str(status))
+                meta.write_text(json.dumps({'url': url, 'validator': response.headers.get('ETag') or
+                                            response.headers.get('Last-Modified')}))
+                last_report = time.monotonic()
+                with part.open(mode) as output:
+                    while True:
+                        if deadline is not None and time.monotonic() >= deadline:
+                            raise RecoveryPaused('Download budget reached; partial bytes remain on Drive.')
+                        try:
+                            block = response.read(1 << 20)
+                        except http.client.IncompleteRead as exc:
+                            output.write(exc.partial)
+                            raise
+                        if not block:
+                            break
+                        output.write(block)
+                        if output.tell() > size:
+                            raise ValueError('Response exceeded expected shard size')
+                        if time.monotonic() - last_report >= 30:
+                            output.flush()
+                            print(path.name, output.tell(), '/', size, 'bytes', flush=True)
+                            last_report = time.monotonic()
+            actual = part.stat().st_size
+            if accept(part):
+                os.replace(part, path)
+                return finish()
+            last = f'Incomplete or invalid response: {actual} bytes, expected {size}'
+            print(last, '; retrying with a fresh offset', flush=True)
+        except (OSError, urllib.error.URLError, http.client.IncompleteRead, ValueError) as exc:
+            last = str(exc)
+            print('Transfer retry:', last, flush=True)
+        if attempt + 1 < attempts:
+            time.sleep(min(2 ** attempt, 8))
+    raise RuntimeError(f'Unable to verify {path.name} after {attempts} attempts: {last}. Partial bytes preserved.')
