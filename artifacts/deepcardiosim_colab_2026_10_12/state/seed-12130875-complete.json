@@ -1,0 +1,12 @@
+{
+  "environment": {
+    "device_type": "cuda",
+    "environment": "3ce4e370ed322a7a629a082670b2a70db7a2f0fd39e02923613e29d5c0e2c8e2",
+    "numpy": "2.2.6",
+    "python": "3.13.15",
+    "torch": "2.8.0+cu126"
+  },
+  "identity": "8c1ec9b214728f9d4c4ccafd05920c70b60571767780edf59e9eaa5541542678",
+  "metrics_sha256": "65552e6e1b87721e906357c46a044ac974a708cb2180e1c91c16cf50b02096ba",
+  "split_hash": "f3e581c3ec15323021e0c0916f03754b8bb619f5b37517f666118f1dd7686e90"
+}

@@ -1,0 +1,17 @@
+{
+  "status": "ALL_SHARDS_VERIFIED",
+  "transport_sha256": "607b7877f36dba7b8e961877c4502aab37a076fc8a62a01765310e812df3b01a",
+  "seconds": 130.86297161300007,
+  "verified_shards": [
+    "data_chunk_001.pt",
+    "data_chunk_002.pt",
+    "data_chunk_003.pt",
+    "data_chunk_004.pt",
+    "data_chunk_005.pt",
+    "data_chunk_006.pt"
+  ],
+  "error": null,
+  "partial_bytes": {},
+  "scientific_protocol_changed": false,
+  "training_started_by_recovery": false
+}

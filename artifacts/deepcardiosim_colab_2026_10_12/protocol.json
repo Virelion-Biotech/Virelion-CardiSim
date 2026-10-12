@@ -1,0 +1,113 @@
+{
+  "cases_per_shard": 48,
+  "environment_sha256": "3ce4e370ed322a7a629a082670b2a70db7a2f0fd39e02923613e29d5c0e2c8e2",
+  "epochs": 30,
+  "fitness": "FIT for a bounded numerical surrogate benchmark against FEM-generated targets.",
+  "handler": "gino",
+  "launcher_sha256": {
+    "runtime.py": "42099bbb908333a480c11eca9f0586759d57162a1c11b977067a9696c45d0985",
+    "training.py": "c63aee5893f194932f786c5054bd5ff5938bde40a69328d43fd39fb8b0faf112",
+    "worker.py": "76a8b3ddbe6411bea07d353948f7bed3a708ddd3dd46624e6569c377b3eb88b3"
+  },
+  "limits": "Targets are simulations, including those on real geometries. Not a full paper reproduction, a patient validation, a cell trajectory model validation, or a CRT outcome validation. Full-case geometry fingerprint is not rotation invariant. Source PyTorch pickles are loaded only after producer MD5 verification.",
+  "max_nodes": 4096,
+  "model": {
+    "grid_size": 16,
+    "hidden_channels": 16,
+    "modes": [
+      4,
+      4,
+      4
+    ],
+    "spectral_layers": 2
+  },
+  "name": "06_CardiSim_DeepCardioSim",
+  "patience": 6,
+  "repo_paths": {
+    "Virelion-CardiSim": "/content/06_CardiSim_DeepCardioSim_v1/Virelion-CardiSim"
+  },
+  "repos": {
+    "Virelion-CardiSim": "b42e3ba1c9141f762be1d1bf3cb2df68e97baab2"
+  },
+  "requirements": [
+    "numba==0.61.2",
+    "llvmlite==0.44.0",
+    "numpy==2.2.6",
+    "scipy==1.15.3",
+    "pandas==2.2.3",
+    "scikit-learn==1.6.1",
+    "pydantic==2.11.7",
+    "pyyaml==6.0.2",
+    "requests==2.32.4",
+    "matplotlib==3.10.1",
+    "seaborn==0.13.2",
+    "click==8.1.8",
+    "jinja2==3.1.6",
+    "opencv-python-headless==4.12.0.88",
+    "tifffile==2025.6.11",
+    "pillow==11.3.0",
+    "defusedxml==0.7.1",
+    "openpyxl==3.1.5",
+    "meshio==5.3.5",
+    "nibabel==5.3.2",
+    "pydicom==3.0.1",
+    "arviz==0.21.0",
+    "xarray==2025.3.1",
+    "wfdb==4.2.0",
+    "jsonschema==4.24.0",
+    "torch==2.8.0",
+    "torch-geometric==2.6.1"
+  ],
+  "run_root": "/content/drive/MyDrive/HeartTwinValidation/06_CardiSim_DeepCardioSim_v1",
+  "scope": "Six producer-checksummed processed shards; 48 seeded cases/shard; up to 4096 nodes/case; geometry-disjoint split; three-seed native CardiGINO vs training-mean baseline.",
+  "seeds": [
+    12130875,
+    1729,
+    42
+  ],
+  "selection_seed": 20261009,
+  "session_seconds": 8100,
+  "shards": [
+    {
+      "checksum": "md5:2f7861ff36929368ec5aa135a359da02",
+      "key": "data_chunk_001.pt",
+      "size": 1042776966,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_001.pt/content"
+    },
+    {
+      "checksum": "md5:0dd31c748999f5858f48828aac7a8094",
+      "key": "data_chunk_002.pt",
+      "size": 1042776902,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_002.pt/content"
+    },
+    {
+      "checksum": "md5:b1a138eca697095266f5ef75c78703f4",
+      "key": "data_chunk_003.pt",
+      "size": 1042776966,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_003.pt/content"
+    },
+    {
+      "checksum": "md5:ccdfada6e61371bde0f8cbfe4da93fe2",
+      "key": "data_chunk_004.pt",
+      "size": 1042777030,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_004.pt/content"
+    },
+    {
+      "checksum": "md5:ccccc19c892048cb6b55df85e7cb1798",
+      "key": "data_chunk_005.pt",
+      "size": 1042777030,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_005.pt/content"
+    },
+    {
+      "checksum": "md5:c185b42e9ac142a850bd9033b44cb0d8",
+      "key": "data_chunk_006.pt",
+      "size": 930676125,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_006.pt/content"
+    }
+  ],
+  "source_archive_sha256": {
+    "Virelion-CardiSim": "14ffa9b06a6df289d2dd9a85f3814a41534d875935bf6c19a0d13ac92f1a1dcf"
+  },
+  "split_seed": 12130875,
+  "title": "Geometry-grouped simulated activation benchmark"
+}

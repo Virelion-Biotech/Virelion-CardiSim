@@ -1,0 +1,24 @@
+{
+  "test_cases": 43,
+  "cases_better_than_baseline_on_seed_mean_rmse": 41,
+  "cases_worse_than_baseline": [
+    83,
+    114
+  ],
+  "mean_seed_pooled_rmse": 8.781265276906444,
+  "baseline_pooled_rmse": 24.13242806832036,
+  "seed_pooled_rmse_sample_std": 0.3995966775393621,
+  "best_epochs": [
+    24,
+    27,
+    29
+  ],
+  "all_source_node_counts": [
+    4804
+  ],
+  "all_scored_node_counts": [
+    4096
+  ],
+  "recorded_geometry_groups": 288,
+  "warning": "Recorded geometry fingerprints do not establish independent anatomical subjects. Test diagnostics are post-hoc; use validation data for tuning and a new independent holdout for qualification."
+}

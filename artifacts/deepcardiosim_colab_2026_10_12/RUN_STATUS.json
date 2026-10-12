@@ -1,0 +1,55 @@
+{
+  "error": null,
+  "input_receipts": {
+    "data/data_chunk_001.pt.receipt.json": {
+      "producer_algorithm": "md5",
+      "producer_checksum": "2f7861ff36929368ec5aa135a359da02",
+      "sha256": "5df0b7d226be0ec9efe24f3fe77c7a5d6590e59c30eaff9c5ddb8f1c46e0812e",
+      "size": 1042776966,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_001.pt/content"
+    },
+    "data/data_chunk_002.pt.receipt.json": {
+      "producer_algorithm": "md5",
+      "producer_checksum": "0dd31c748999f5858f48828aac7a8094",
+      "sha256": "fce921761fe698579c28e7c00266ecd4592e93b09515b73aa246081cc0cfd155",
+      "size": 1042776902,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_002.pt/content"
+    },
+    "data/data_chunk_003.pt.receipt.json": {
+      "producer_algorithm": "md5",
+      "producer_checksum": "b1a138eca697095266f5ef75c78703f4",
+      "sha256": "0c67327cee2ab4b342a1051db16341a65fd43c5a4c60871aa17ac02d16a0a5c5",
+      "size": 1042776966,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_003.pt/content"
+    },
+    "data/data_chunk_004.pt.receipt.json": {
+      "producer_algorithm": "md5",
+      "producer_checksum": "ccdfada6e61371bde0f8cbfe4da93fe2",
+      "sha256": "3b1f64bd84d3eb7c39fe9e75612db24d4531c2595f726a6a147d0e6cd3993ca0",
+      "size": 1042777030,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_004.pt/content"
+    },
+    "data/data_chunk_005.pt.receipt.json": {
+      "producer_algorithm": "md5",
+      "producer_checksum": "ccccc19c892048cb6b55df85e7cb1798",
+      "sha256": "a609dab3ffa604621df48b7dbe4681bd07be1ac5c96978a1f12ab32b4da0fff4",
+      "size": 1042777030,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_005.pt/content"
+    },
+    "data/data_chunk_006.pt.receipt.json": {
+      "producer_algorithm": "md5",
+      "producer_checksum": "c185b42e9ac142a850bd9033b44cb0d8",
+      "sha256": "ce1d97d6bbb71d1deef428a983ad220474088fe3ab082ca4d9cee2b85dae1dea",
+      "size": 930676125,
+      "url": "https://zenodo.org/api/records/17651628/files/data_chunk_006.pt/content"
+    }
+  },
+  "protocol_sha256": "8c1ec9b214728f9d4c4ccafd05920c70b60571767780edf59e9eaa5541542678",
+  "scientific_validation": "NOT_ESTABLISHED_BY_EXECUTION",
+  "scope": "Six producer-checksummed processed shards; 48 seeded cases/shard; up to 4096 nodes/case; geometry-disjoint split; three-seed native CardiGINO vs training-mean baseline.",
+  "seconds_this_session": 60.14301958300007,
+  "source_pins": {
+    "Virelion-CardiSim": "b42e3ba1c9141f762be1d1bf3cb2df68e97baab2"
+  },
+  "status": "COMPLETE_SIMULATED"
+}
