@@ -4,6 +4,21 @@ CardiSim is the Virelion **phenotype-dynamics engine**. It generates reproducibl
 
 CardiSim is not a validated physiological model or clinical digital twin. Its normalized phenotype variables are latent abstractions unless an external calibration study establishes a measurement relationship.
 
+
+<!-- VALIDATION_PRODUCT_STATUS:BEGIN -->
+## Validation and product completion status
+
+**Reviewed 2026-10-14; implementation base `462413ec8fb3`.** **Status: Bounded numerical surrogate benchmark; biological/clinical validation incomplete.** This is an evidence-backed scope assessment, not a percentage-complete estimate or a declaration that the product is finished.
+
+| Area | Current evidence / remaining gate |
+|---|---|
+| Software / operational checks | Automated test sources and CI definitions are present; this documentation audit does not report a new algorithm/data-validation run. |
+| Scientific or domain evidence | Three CUDA CardiGINO seeds on 288 selected simulation cases have mean test RMSE 8.781 versus baseline 24.132 (63.6% lower). The 202/43/43 split is disjoint by recorded fingerprints, not proof of independent anatomical subjects. Trained weights were retained on Drive. |
+| Remaining for the declared product scope | Run controlled full-4,804-node and validation-stopped training ablations with stronger baselines; audit physical scale and independent anatomical identity; qualify on a new holdout. Separately calibrate/validate phenotype trajectories and phenotype-to-CDT mappings with empirical longitudinal/perturbation data. |
+
+Evidence and limits: [repository report](docs/DEEPCARDIOSIM_COLAB_2026-10-12.md). The [organization status index](https://github.com/Virelion-Biotech/Virelion-HeartTwin/blob/main/docs/STACK_VALIDATION_STATUS.md) separates software, numerical, data-readiness and empirical qualification. Code/schema execution or a completed download is not a substitute for endpoint-specific validation.
+<!-- VALIDATION_PRODUCT_STATUS:END -->
+
 ## What it contains
 
 - Bounded twelve-dimensional phenotype dynamics.
