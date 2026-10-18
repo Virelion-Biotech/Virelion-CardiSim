@@ -12,8 +12,12 @@ import argparse
 import hashlib
 import json
 import sys
+import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 RECORD_ID = "17651628"
@@ -22,14 +26,39 @@ USER_AGENT = "Virelion-CardiSim/0.3 DeepCardioSim-ingestor"
 CHUNK_SIZE = 1024 * 1024
 
 
-def fetch_record(url: str = RECORD_API) -> dict[str, Any]:
+def fetch_record(url: str = RECORD_API, *, attempts: int = 4) -> dict[str, Any]:
+    if not 1 <= attempts <= 6:
+        raise ValueError("attempts must be between 1 and 6")
     request = Request(
         url,
         headers={"User-Agent": USER_AGENT, "Accept": "application/json"},
     )
-    with urlopen(request, timeout=60) as response:
-        payload = json.load(response)
-    if not isinstance(payload, dict) or "files" not in payload:
+    for attempt in range(attempts):
+        try:
+            with urlopen(request, timeout=60) as response:
+                payload = json.load(response)
+            break
+        except (HTTPError, URLError, TimeoutError, ConnectionError) as exc:
+            if isinstance(exc, HTTPError) and exc.code not in {408, 429, 500, 502, 503, 504}:
+                raise
+            if attempt + 1 == attempts:
+                raise
+            delay = min(2 ** attempt, 30)
+            if isinstance(exc, HTTPError) and exc.headers:
+                value = exc.headers.get("Retry-After")
+                if value:
+                    try:
+                        delay = max(delay, float(value))
+                    except ValueError:
+                        try:
+                            deadline = parsedate_to_datetime(value)
+                            delay = max(delay, (deadline - datetime.now(timezone.utc)).total_seconds())
+                        except (ValueError, TypeError, OverflowError):
+                            pass
+            delay = min(max(delay, 0), 30)
+            print(f"Zenodo request attempt {attempt + 1}/{attempts} failed: {exc}; retry in {delay:g}s", file=sys.stderr)
+            time.sleep(delay)
+    if not isinstance(payload, dict) or not isinstance(payload.get("files"), list) or not payload["files"]:
         raise ValueError("Zenodo response is missing the expected files collection")
     return payload
 
