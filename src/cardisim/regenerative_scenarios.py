@@ -63,30 +63,30 @@ def simulate_regenerative_scenario(scenario_id:str,*,duration:float=28.0,dt:floa
         cumulative=np.cumsum(np.r_[0.0,np.diff(t)]*(pulse[0,:])) if len(t)>1 else np.zeros(1)
         cumulative=cumulative/max(float(cumulative[-1]),1e-12)
         axes={
-         "cell_cycle_entry":_clip(0.08+0.78*pulse+offset()),
-         "cell_number_proxy":_clip(0.48+0.13*cumulative[None,:]+offset(0.5)),
-         "contractility_latent":_clip(0.38+0.18*(1-np.exp(-tt/18))+offset()),
-         "fibrosis_latent":_clip(0.52-0.07*(1-np.exp(-tt/35))+offset()),
-         "arrhythmia_risk_latent":_clip(0.16+0.58*pulse+offset()),
-         "off_target_proliferation_latent":_clip(0.06+0.42*pulse+offset())
+         "cell_cycle_entry":_clip(0.08+0.78*pulse+offsets()),
+         "cell_number_proxy":_clip(0.48+0.13*cumulative[None,:]+offsets(0.5)),
+         "contractility_latent":_clip(0.38+0.18*(1-np.exp(-tt/18))+offsets()),
+         "fibrosis_latent":_clip(0.52-0.07*(1-np.exp(-tt/35))+offsets()),
+         "arrhythmia_risk_latent":_clip(0.16+0.58*pulse+offsets()),
+         "off_target_proliferation_latent":_clip(0.06+0.42*pulse+offsets())
         }
     elif key=="pln_r14del_calcium":
         modulation=_sigmoid((tt-7.0)/1.8)
-        axes={"calcium_handling_latent":_clip(0.28+0.35*modulation+offset()),"target_modulation_latent":_clip(0.05+0.72*modulation+offset()),"arrhythmia_risk_latent":_clip(0.68-0.30*modulation+offset()),"contractility_latent":_clip(0.42+0.10*modulation+offset())}
+        axes={"calcium_handling_latent":_clip(0.28+0.35*modulation+offsets()),"target_modulation_latent":_clip(0.05+0.72*modulation+offsets()),"arrhythmia_risk_latent":_clip(0.68-0.30*modulation+offsets()),"contractility_latent":_clip(0.42+0.10*modulation+offsets())}
     elif key=="bag3_dcm_proteostasis":
         decline=1-np.exp(-tt/35)
-        axes={"proteostasis_latent":_clip(0.62-0.35*decline+offset()),"sarcomeric_integrity_latent":_clip(0.66-0.28*decline+offset()),"contractility_latent":_clip(0.62-0.30*decline+offset()),"hypertrophy_latent":_clip(0.25+0.42*decline+offset())}
+        axes={"proteostasis_latent":_clip(0.62-0.35*decline+offsets()),"sarcomeric_integrity_latent":_clip(0.66-0.28*decline+offsets()),"contractility_latent":_clip(0.62-0.30*decline+offsets()),"hypertrophy_latent":_clip(0.25+0.42*decline+offsets())}
     elif key=="pkp2_arrhythmogenic":
         progression=tt/max(duration,1e-12)
-        axes={"desmosomal_integrity_latent":_clip(0.72-0.42*progression+offset()),"electrophysiology_instability_latent":_clip(0.18+0.56*progression+offset()),"arrhythmia_risk_latent":_clip(0.20+0.62*progression+offset()),"fibrosis_latent":_clip(0.12+0.30*progression+offset())}
+        axes={"desmosomal_integrity_latent":_clip(0.72-0.42*progression+offsets()),"electrophysiology_instability_latent":_clip(0.18+0.56*progression+offsets()),"arrhythmia_risk_latent":_clip(0.20+0.62*progression+offsets()),"fibrosis_latent":_clip(0.12+0.30*progression+offsets())}
     elif key=="lamp2_danon_autophagy":
         impairment=1-np.exp(-tt/24)
-        axes={"autophagic_flux_latent":_clip(0.68-0.42*impairment+offset()),"lysosomal_function_latent":_clip(0.70-0.40*impairment+offset()),"hypertrophy_latent":_clip(0.22+0.48*impairment+offset()),"contractility_latent":_clip(0.62-0.16*impairment+offset())}
+        axes={"autophagic_flux_latent":_clip(0.68-0.42*impairment+offsets()),"lysosomal_function_latent":_clip(0.70-0.40*impairment+offsets()),"hypertrophy_latent":_clip(0.22+0.48*impairment+offsets()),"contractility_latent":_clip(0.62-0.16*impairment+offsets())}
     else:
         ifng=0.72*np.exp(-tt/9)+0.08
         macrophage=0.18+0.58*np.exp(-((tt-4)/8)**2)
         matrix=0.62-0.25*(1-np.exp(-tt/20))
-        axes={"ifng_signalling_latent":_clip(ifng+offset()),"macrophage_activity_latent":_clip(macrophage+offset()),"matrix_remodelling_latent":_clip(matrix+offset()),"fibrosis_latent":_clip(0.55-0.16*(1-np.exp(-tt/22))+offset())}
+        axes={"ifng_signalling_latent":_clip(ifng+offsets()),"macrophage_activity_latent":_clip(macrophage+offsets()),"matrix_remodelling_latent":_clip(matrix+offsets()),"fibrosis_latent":_clip(0.55-0.16*(1-np.exp(-tt/22))+offsets())}
     for name,values in axes.items():
         if values.shape!=(n_samples,len(t)) or not np.isfinite(values).all() or np.any((values<0)|(values>1)):
             raise FloatingPointError(f"scenario axis {name} violated finite/bounded output contract")
