@@ -1,0 +1,17 @@
+{
+ "schema_version":"1.0",
+ "manifest_id":"cardisim-regenerative-challenge-scenarios",
+ "version":"1.0.0",
+ "generator_version":"cardisim-regenerative-scenarios/1.0.0",
+ "evidence_state":"synthetic",
+ "calibration_status":"uncalibrated_synthetic",
+ "scenarios":[
+  {"scenario_id":"post_mi_transient_proliferation","stratum":"myocardial_regeneration","axes":["cell_cycle_entry","cell_number_proxy","contractility_latent","fibrosis_latent","arrhythmia_risk_latent","off_target_proliferation_latent"]},
+  {"scenario_id":"pln_r14del_calcium","stratum":"genetic_disease_modification","axes":["calcium_handling_latent","target_modulation_latent","arrhythmia_risk_latent","contractility_latent"]},
+  {"scenario_id":"bag3_dcm_proteostasis","stratum":"genetic_disease_modification","axes":["proteostasis_latent","sarcomeric_integrity_latent","contractility_latent","hypertrophy_latent"]},
+  {"scenario_id":"pkp2_arrhythmogenic","stratum":"genetic_disease_modification","axes":["desmosomal_integrity_latent","electrophysiology_instability_latent","arrhythmia_risk_latent","fibrosis_latent"]},
+  {"scenario_id":"lamp2_danon_autophagy","stratum":"genetic_disease_modification","axes":["autophagic_flux_latent","lysosomal_function_latent","hypertrophy_latent","contractility_latent"]},
+  {"scenario_id":"immune_resolution_ifng","stratum":"myocardial_repair_preservation","axes":["ifng_signalling_latent","macrophage_activity_latent","matrix_remodelling_latent","fibrosis_latent"]}
+ ],
+ "global_policy":{"clinical_or_therapeutic_efficacy_inference":false,"latent_axes_are_not_measured_biomarkers":true,"no_named_therapy_effect_sizes":true,"seed_required":true}
+}
