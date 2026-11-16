@@ -49,8 +49,8 @@ def _clip(x): return np.clip(x,0.0,1.0)
 
 def simulate_regenerative_scenario(scenario_id:str,*,duration:float=28.0,dt:float=0.25,seed:int=7,n_samples:int=32,heterogeneity:float=0.015)->RegenerativeScenarioResult:
     """Generate a seeded cohort of bounded, explicitly synthetic latent trajectories."""
-    key=scenario_id.strip().lower()
-    if key not in SCENARIOS: raise KeyError(f"unknown scenario {scenario_id!r}; choose from {sorted(SCENARIOS)}")
+    scenario_name=scenario_id.strip().lower()
+    if scenario_name not in SCENARIOS: raise KeyError(f"unknown scenario {scenario_id!r}; choose from {sorted(SCENARIOS)}")
     if not isinstance(n_samples,int) or n_samples<1: raise ValueError("n_samples must be a positive integer")
     if not np.isfinite(heterogeneity) or heterogeneity<0: raise ValueError("heterogeneity must be finite and non-negative")
     t=_grid(float(duration),float(dt)); rng=np.random.default_rng(seed)
@@ -58,7 +58,7 @@ def simulate_regenerative_scenario(scenario_id:str,*,duration:float=28.0,dt:floa
     offsets=lambda scale=1.0: rng.normal(0.0,heterogeneity*scale,size=(n_samples,1))
     tt=t[None,:]
     axes={}
-    if key=="post_mi_transient_proliferation":
+    if scenario_name=="post_mi_transient_proliferation":
         pulse=np.exp(-0.5*((tt-4.0)/1.5)**2)
         cumulative=np.cumsum(np.r_[0.0,np.diff(t)]*(pulse[0,:])) if len(t)>1 else np.zeros(1)
         cumulative=cumulative/max(float(cumulative[-1]),1e-12)
@@ -70,16 +70,16 @@ def simulate_regenerative_scenario(scenario_id:str,*,duration:float=28.0,dt:floa
          "arrhythmia_risk_latent":_clip(0.16+0.58*pulse+offsets()),
          "off_target_proliferation_latent":_clip(0.06+0.42*pulse+offsets())
         }
-    elif key=="pln_r14del_calcium":
+    elif scenario_name=="pln_r14del_calcium":
         modulation=_sigmoid((tt-7.0)/1.8)
         axes={"calcium_handling_latent":_clip(0.28+0.35*modulation+offsets()),"target_modulation_latent":_clip(0.05+0.72*modulation+offsets()),"arrhythmia_risk_latent":_clip(0.68-0.30*modulation+offsets()),"contractility_latent":_clip(0.42+0.10*modulation+offsets())}
-    elif key=="bag3_dcm_proteostasis":
+    elif scenario_name=="bag3_dcm_proteostasis":
         decline=1-np.exp(-tt/35)
         axes={"proteostasis_latent":_clip(0.62-0.35*decline+offsets()),"sarcomeric_integrity_latent":_clip(0.66-0.28*decline+offsets()),"contractility_latent":_clip(0.62-0.30*decline+offsets()),"hypertrophy_latent":_clip(0.25+0.42*decline+offsets())}
-    elif key=="pkp2_arrhythmogenic":
+    elif scenario_name=="pkp2_arrhythmogenic":
         progression=tt/max(duration,1e-12)
         axes={"desmosomal_integrity_latent":_clip(0.72-0.42*progression+offsets()),"electrophysiology_instability_latent":_clip(0.18+0.56*progression+offsets()),"arrhythmia_risk_latent":_clip(0.20+0.62*progression+offsets()),"fibrosis_latent":_clip(0.12+0.30*progression+offsets())}
-    elif key=="lamp2_danon_autophagy":
+    elif scenario_name=="lamp2_danon_autophagy":
         impairment=1-np.exp(-tt/24)
         axes={"autophagic_flux_latent":_clip(0.68-0.42*impairment+offsets()),"lysosomal_function_latent":_clip(0.70-0.40*impairment+offsets()),"hypertrophy_latent":_clip(0.22+0.48*impairment+offsets()),"contractility_latent":_clip(0.62-0.16*impairment+offsets())}
     else:
@@ -90,8 +90,8 @@ def simulate_regenerative_scenario(scenario_id:str,*,duration:float=28.0,dt:floa
     for name,values in axes.items():
         if values.shape!=(n_samples,len(t)) or not np.isfinite(values).all() or np.any((values<0)|(values>1)):
             raise FloatingPointError(f"scenario axis {name} violated finite/bounded output contract")
-    manifest={"schema_version":"1.0","scenario_version":SCENARIO_VERSION,"generator_version":GENERATOR_VERSION,"scenario_id":key,"description":SCENARIOS[key],"evidence_state":"synthetic","seed":int(seed),"n_samples":n_samples,"duration_days":float(duration),"dt_days":float(dt),"heterogeneity_sd":float(heterogeneity),"axes":sorted(axes),"axis_interpretation":"normalized latent challenge variables; not measured biomarkers","calibration_status":"uncalibrated_synthetic","clinical_or_therapeutic_efficacy_inference":False}
-    return RegenerativeScenarioResult(key,t,axes,manifest)
+    manifest={"schema_version":"1.0","scenario_version":SCENARIO_VERSION,"generator_version":GENERATOR_VERSION,"scenario_id":scenario_name,"description":SCENARIOS[key],"evidence_state":"synthetic","seed":int(seed),"n_samples":n_samples,"duration_days":float(duration),"dt_days":float(dt),"heterogeneity_sd":float(heterogeneity),"axes":sorted(axes),"axis_interpretation":"normalized latent challenge variables; not measured biomarkers","calibration_status":"uncalibrated_synthetic","clinical_or_therapeutic_efficacy_inference":False}
+    return RegenerativeScenarioResult(scenario_name,t,axes,manifest)
 
 def timestep_sensitivity(scenario_id:str,*,duration:float=28.0,dt:float=0.5,seed:int=7,n_samples:int=32)->dict[str,Any]:
     """Compare mean latent trajectories at dt and dt/2 using linear interpolation."""
