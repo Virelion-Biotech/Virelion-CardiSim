@@ -135,3 +135,8 @@ GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later). See `LICENS
 ## Bounded CardiGINO simulation benchmark
 
 The [reviewed 12 October Colab benchmark](docs/DEEPCARDIOSIM_COLAB_2026-10-12.md) records three CUDA seeds, 288 selected cases from six DeepCardioSim shards, and a 202/43/43 split by recorded geometry fingerprints. Mean seed test RMSE is 8.781 versus 24.132 for the training-mean baseline (63.6% lower). This is a bounded numerical surrogate benchmark, not clinical or phenotype-model validation; raw predictions and trained weights were not returned. Exact results, provenance and a staged improvement plan are committed.
+
+
+## Synthetic regenerative and genotype-specific challenges
+
+Six seeded, explicitly synthetic challenge presets are available: post-MI transient proliferation/safety trade-offs, PLN-R14del calcium handling, BAG3 proteostasis, PKP2 desmosomal/arrhythmia phenotype, LAMP2/Danon autophagy, and IFN-gamma/macrophage-mediated matrix resolution. They use separate latent sidecar axes; the canonical 12-dimensional phenotype state and phenotype-to-CDT mapping are unchanged. Every output carries a synthetic evidence label, seed, generator version and fingerprint. See [scenario protocol](docs/REGENERATIVE_CHALLENGE_SCENARIOS.md).
