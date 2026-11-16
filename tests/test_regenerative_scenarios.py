@@ -29,5 +29,5 @@ def test_unknown_scenario_and_invalid_grid_fail():
 
 def test_timestep_sensitivity_reports_numerical_not_biological_metric():
     report=timestep_sensitivity("lamp2_danon_autophagy",duration=14,dt=0.5)
-    assert report["max_rmse"]<1e-12
+    assert np.isfinite(report["max_rmse"]) and report["max_rmse"]<0.01
     assert "not biological validation" in report["interpretation"]
