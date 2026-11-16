@@ -31,7 +31,7 @@ class RegenerativeScenarioResult:
     def fingerprint(self)->str:
         h=hashlib.sha256(json.dumps(self.manifest,sort_keys=True,separators=(",",":")).encode())
         h.update(np.ascontiguousarray(self.time).tobytes())
-        for key in sorted(self.axes): h.update(key.encode()); h.update(np.ascontiguousarray(self.axes[key]).tobytes())
+        for axis_name in sorted(self.axes): h.update(axis_name.encode()); h.update(np.ascontiguousarray(self.axes[axis_name]).tobytes())
         return h.hexdigest()
     def to_dict(self)->dict[str,Any]:
         return {"scenario_id":self.scenario_id,"time_days":self.time.tolist(),"axes":{k:v.tolist() for k,v in self.axes.items()},"manifest":self.manifest,"fingerprint":self.fingerprint()}
@@ -90,7 +90,7 @@ def simulate_regenerative_scenario(scenario_id:str,*,duration:float=28.0,dt:floa
     for name,values in axes.items():
         if values.shape!=(n_samples,len(t)) or not np.isfinite(values).all() or np.any((values<0)|(values>1)):
             raise FloatingPointError(f"scenario axis {name} violated finite/bounded output contract")
-    manifest={"schema_version":"1.0","scenario_version":SCENARIO_VERSION,"generator_version":GENERATOR_VERSION,"scenario_id":scenario_name,"description":SCENARIOS[key],"evidence_state":"synthetic","seed":int(seed),"n_samples":n_samples,"duration_days":float(duration),"dt_days":float(dt),"heterogeneity_sd":float(heterogeneity),"axes":sorted(axes),"axis_interpretation":"normalized latent challenge variables; not measured biomarkers","calibration_status":"uncalibrated_synthetic","clinical_or_therapeutic_efficacy_inference":False}
+    manifest={"schema_version":"1.0","scenario_version":SCENARIO_VERSION,"generator_version":GENERATOR_VERSION,"scenario_id":scenario_name,"description":SCENARIOS[scenario_name],"evidence_state":"synthetic","seed":int(seed),"n_samples":n_samples,"duration_days":float(duration),"dt_days":float(dt),"heterogeneity_sd":float(heterogeneity),"axes":sorted(axes),"axis_interpretation":"normalized latent challenge variables; not measured biomarkers","calibration_status":"uncalibrated_synthetic","clinical_or_therapeutic_efficacy_inference":False}
     return RegenerativeScenarioResult(scenario_name,t,axes,manifest)
 
 def timestep_sensitivity(scenario_id:str,*,duration:float=28.0,dt:float=0.5,seed:int=7,n_samples:int=32)->dict[str,Any]:
@@ -98,7 +98,7 @@ def timestep_sensitivity(scenario_id:str,*,duration:float=28.0,dt:float=0.5,seed
     coarse=simulate_regenerative_scenario(scenario_id,duration=duration,dt=dt,seed=seed,n_samples=n_samples,heterogeneity=0.0)
     fine=simulate_regenerative_scenario(scenario_id,duration=duration,dt=dt/2,seed=seed,n_samples=n_samples,heterogeneity=0.0)
     errors={}
-    for key in coarse.axes:
-        interp=np.interp(coarse.time,fine.time,fine.axes[key].mean(axis=0))
-        errors[key]=float(np.sqrt(np.mean((coarse.axes[key].mean(axis=0)-interp)**2)))
+    for axis_name in coarse.axes:
+        interp=np.interp(coarse.time,fine.time,fine.axes[axis_name].mean(axis=0))
+        errors[axis_name]=float(np.sqrt(np.mean((coarse.axes[axis_name].mean(axis=0)-interp)**2)))
     return {"scenario_id":scenario_id,"dt_coarse":dt,"dt_fine":dt/2,"rmse_by_axis":errors,"max_rmse":max(errors.values(),default=0.0),"interpretation":"numerical discretization comparison only; not biological validation"}
