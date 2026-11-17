@@ -36,6 +36,7 @@ from .phenotype_to_cdt import (
     validate_phenotype_to_cdt,
 )
 from .presets import population_preset
+from .regenerative_scenarios import RegenerativeScenarioResult, SCENARIOS as REGENERATIVE_SCENARIOS, simulate_regenerative_scenario, timestep_sensitivity
 from .proxy_targets import mean_target, module_scores
 from .simulate import SIMULATION_RESULT_VERSION, CardiacSimulator, SimulationResult, health_score, maturity_score
 from .target_derivation import derive_targets, write_long_targets
@@ -100,6 +101,7 @@ __all__ = [
     "maturity_score",
     "module_scores",
     "population_preset",
+    "RegenerativeScenarioResult", "REGENERATIVE_SCENARIOS", "simulate_regenerative_scenario", "timestep_sensitivity",
     "profile_from_dict",
     "sparse_module_scores",
     "state_spread",

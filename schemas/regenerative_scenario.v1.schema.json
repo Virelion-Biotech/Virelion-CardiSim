@@ -1,0 +1,16 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://virelionbiotech.org/schemas/regenerative_scenario.v1.schema.json",
+ "title":"CardiSim synthetic regenerative challenge scenario",
+ "type":"object",
+ "required":["schema_version","scenario_version","generator_version","scenario_id","description","evidence_state","seed","n_samples","duration_days","dt_days","heterogeneity_sd","axes","axis_interpretation","calibration_status","clinical_or_therapeutic_efficacy_inference"],
+ "properties":{
+  "schema_version":{"const":"1.0"},"scenario_version":{"type":"string"},"generator_version":{"type":"string"},
+  "scenario_id":{"enum":["post_mi_transient_proliferation","pln_r14del_calcium","bag3_dcm_proteostasis","pkp2_arrhythmogenic","lamp2_danon_autophagy","immune_resolution_ifng"]},
+  "description":{"type":"string"},"evidence_state":{"const":"synthetic"},"seed":{"type":"integer"},
+  "n_samples":{"type":"integer","minimum":1},"duration_days":{"type":"number","exclusiveMinimum":0},"dt_days":{"type":"number","exclusiveMinimum":0},
+  "heterogeneity_sd":{"type":"number","minimum":0},"axes":{"type":"array","items":{"type":"string"},"minItems":1},
+  "axis_interpretation":{"type":"string"},"calibration_status":{"const":"uncalibrated_synthetic"},"clinical_or_therapeutic_efficacy_inference":{"const":false}
+ },
+ "additionalProperties":false
+}
